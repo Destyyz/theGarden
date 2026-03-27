@@ -116,7 +116,7 @@ void initBasicScene() {
 	int height = 10;
 	auto width = 10;
 	auto canals = 3;
-	auto image = stbi_load("../assets/textures/triforce.jpg", &width, &height, &canals, 0);
+	auto image = stbi_load("../assets/herbe.png", &width, &height, &canals, 0);
 	if (image != nullptr){
 		std::cout << "Image chargée correctement" << std::endl;
 	}
@@ -132,26 +132,24 @@ void initBasicScene() {
 
 void renderBasicScene() {
 	a_frame->draw();
-	// myEngine.activateTexturing(true);
-	// myTexture.attachTexture();
-
-
+	
 	//boule qui bouge pas
 	myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
+		myEngine.activateTexturing(true);
+		myTexture.attachTexture();
 		myEngine.setFlatColor(0, 1, 1);
 		myEngine.updateMvMatrix();
 		boule->draw();
+		myTexture.detachTexture();
+		myEngine.activateTexturing(false);
 	myEngine.mvMatrixStack.popMatrix();
 
 	myEngine.switchToFlatShading();
 
-	//myEngine.activateTexturing(false);
-
 	//boule qui bouge
 	myEngine.setFlatColor(1.0,1.0,0.0);
 	myEngine.mvMatrixStack.pushMatrix();
-	myEngine.setFlatColor(1, 1, 0);
 	if (flag_rotation){
 		auto angle = glfwGetTime();
 		myEngine.mvMatrixStack.addTranslation(Vector3D(5*cos(angle), 5*sin(angle), 15.));
