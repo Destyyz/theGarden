@@ -182,7 +182,7 @@ int main(int /*argc*/, char** /*argv*/)
 	glfwSetErrorCallback(onError);
 
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, NULL, NULL);
+	window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, nullptr, nullptr);
 	if (!window)
 	{
 		// If no context created : exit !
