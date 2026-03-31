@@ -3,7 +3,7 @@
 #include "glad/glad.h"
 #include "glbasimac/glbi_engine.hpp"
 #include "glbasimac/glbi_texture.hpp"
-#include "draw_scene.hpp"
+#include "init_terrain.hpp"
 #include "tools/shaders.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "tools/stb_image.h"
@@ -22,8 +22,6 @@ static float aspectRatio = 1.0f;
 static const double FRAMERATE_IN_SECONDS = 1. / 30.;
 
 /* 3D Engine global variables */
-StandardMesh* rectangle;
-IndexedMesh* boule;
 StandardMesh* a_frame;
 GLBI_Texture myTexture;
 
@@ -92,15 +90,8 @@ void onMouseButton(GLFWwindow* window, int button, int action, int /*mods*/)
 
 	}
 }
+
 void initBasicScene() {
-	rectangle = basicRect(10.0,10.0);
-	rectangle->createVAO();
-
-	
-	boule = basicSphere(10.f);
-	boule->createVAO();
-	
-
 	a_frame = createRepere(10.0);
 	a_frame->createVAO();
 
@@ -121,18 +112,21 @@ void initBasicScene() {
 		std::cout << "Image chargée correctement" << std::endl;
 	}
 
+	/*
 	myTexture.createTexture();
 	myTexture.attachTexture();
 	myTexture.setParameters(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	myTexture.loadImage(width, height, canals, image);
 	myTexture.detachTexture();
 	stbi_image_free(image);
+	*/
 }
 
 
 void renderBasicScene() {
 	a_frame->draw();
 	
+	/*
 	//boule qui bouge pas
 	myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
@@ -164,9 +158,7 @@ void renderBasicScene() {
 	myEngine.updateMvMatrix();
 	boule->draw();
 	myEngine.mvMatrixStack.popMatrix();
-
-
-
+	*/
 }
 
 int main(int /*argc*/, char** /*argv*/)
