@@ -4,6 +4,7 @@
 #include "glbasimac/glbi_engine.hpp"
 #include "glbasimac/glbi_texture.hpp"
 #include "init_terrain.hpp"
+#include "open_file.hpp"
 #include "tools/shaders.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "tools/stb_image.h"
@@ -20,6 +21,7 @@ static float aspectRatio = 1.0f;
 
 /* Minimal time wanted between two images */
 static const double FRAMERATE_IN_SECONDS = 1. / 30.;
+
 
 /* 3D Engine global variables */
 StandardMesh* a_frame;
@@ -92,9 +94,14 @@ void onMouseButton(GLFWwindow* window, int button, int action, int /*mods*/)
 }
 
 void initBasicScene() {
-	a_frame = createRepere(10.0);
-	a_frame->createVAO();
+	auto pixmap = open_file("../assets/terrain_copy.pgm");
 
+	initScene(pixmap);
+	/*
+	a_frame = createRepere(10.0);
+	//a_frame->createVAO();
+
+	
 	myEngine.switchToPhongShading();
 	myEngine.setLightPosition({5, 0, 15, 1.0});
 	myEngine.setLightIntensity({100, 100, 100});
@@ -102,8 +109,9 @@ void initBasicScene() {
 	myEngine.setSpecularColor({1, 0, 0});
 	myEngine.switchToFlatShading();
 
+
 	glActiveTexture(GL_TEXTURE0);
-	/*Load de l'image*/
+	//Load de l'image
 	int height = 10;
 	auto width = 10;
 	auto canals = 3;
@@ -112,7 +120,6 @@ void initBasicScene() {
 		std::cout << "Image chargée correctement" << std::endl;
 	}
 
-	/*
 	myTexture.createTexture();
 	myTexture.attachTexture();
 	myTexture.setParameters(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -122,9 +129,18 @@ void initBasicScene() {
 	*/
 }
 
-
 void renderBasicScene() {
-	a_frame->draw();
+	//a_frame->draw();
+
+	drawFrame();
+
+	myEngine.setFlatColor(1.0,1.0,0.0);
+	myEngine.mvMatrixStack.pushMatrix();
+		//myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
+		myEngine.mvMatrixStack.addHomothety(5.);
+		myEngine.updateMvMatrix();
+		drawTerrain();
+	myEngine.mvMatrixStack.popMatrix();
 	
 	/*
 	//boule qui bouge pas

@@ -1,8 +1,8 @@
 #pragma once
-#include "glbasimac/glbi_engine.hpp"
-#include "glbasimac/glbi_set_of_points.hpp"
-#include "glbasimac/glbi_convex_2D_shape.hpp"
-#include "tools/basic_mesh.hpp"
+#include "../third_party/glbasimac/glbasimac/glbi_engine.hpp"
+#include "../third_party/glbasimac/glbasimac/glbi_set_of_points.hpp"
+#include "../third_party/glbasimac/glbasimac/glbi_convex_2D_shape.hpp"
+#include "../third_party/glbasimac/tools/basic_mesh.hpp"
 
 using namespace glbasimac;
 
@@ -19,6 +19,11 @@ extern bool flag_anim_rot_arm;
 /* OpenGL Engine */
 extern GLBI_Engine myEngine;
 
-void initScene();
+extern std::vector<int> trees;
+extern int width;
+
+void initScene(std::vector<Vector3D> pixmap);
 
 void drawFrame();
+
+void drawTerrain();

@@ -1,5 +1,10 @@
 #include "open_file.hpp"
 
+std::vector<int> trees;
+int height;
+int width;
+int gray;
+
 std::vector<int> get_neighbors(int index, int width) {
     std::vector<int> neighbors;
     int x = index % width;
@@ -18,47 +23,53 @@ std::vector<int> get_neighbors(int index, int width) {
     return neighbors;
 }
 
-std::vector<std::tuple<int, int, int>> compute_bytes(std::string str, int width) {
-    std::vector<std::tuple<int, int, int>> tuple_list;
+std::vector<Vector3D> compute_bytes(std::string str, int width) {
+    
+    std::vector<Vector3D> pixmap;
+    auto Sh = 0.004;
+    auto Sp = 0.05;
 
-    std::vector<unsigned int> list;
+    std::vector<unsigned int> elevations;
     for (auto i : str){
         auto val = static_cast<unsigned int>((unsigned char) i);
-        list.emplace_back(val);
+        elevations.emplace_back(val);
     }
-
-    unsigned int min = list[0];
-    for (auto val : list){
+    
+    unsigned int min = elevations[0];
+    for (auto val : elevations){
         min = val < min ? val : min;
     }
+    //std::cout << "elevations : " << elevations.size() << std::endl;
 
-    for (auto i = 0; i < list.size(); i++){
+    for (long unsigned int i = 0; i < elevations.size(); i++){
         auto x = i %  width;
         auto y = i / width;
-        std::tuple<int, int, int> tuple = std::make_tuple(x, list[i]*10 - min, y);
-        tuple_list.emplace_back(tuple);
-    }
 
-    for (auto i = 0; i < tuple_list.size(); i++){
-        if (std::get<1>(tuple_list[i]) == 0){
+        if (elevations[i] == 0){
+            trees.emplace_back(i);
+            std::cout << i << " : " << elevations[i] << std::endl;
+            //trees.add[i]
+
             unsigned int avg = 0;
             auto neighbors = get_neighbors(i, width);
             for (auto neighbor : neighbors){
-                avg += std::get<1>(tuple_list[neighbor]);
+                avg += elevations[neighbor];
             }
-            avg /= 4;
-            std::get<1>(tuple_list[i]) = avg;
+            avg /= neighbors.size();
+            elevations[i] = avg;
         }
+        
+        Vector3D tuple = Vector3D{x*Sp, elevations[i]*Sh - min, y*Sp};
+        //std::cout << "(x, y, z) : " << std::get<0>(tuple) << " " << std::get<1>(tuple) << " " << std::get<2>(tuple) << std::endl;
+        pixmap.emplace_back(tuple);
     }
-    return tuple_list;
+    return pixmap;
 }
 
-std::vector<std::tuple<int, int, int>> open_file(std::string file_name) {
+std::vector<Vector3D> open_file(std::string file_name) {
     std::ifstream file(file_name);
     std::string str;
 
-    int height = 0;
-    int width = 0;
     int gray = 0;
 
     int line = 0;
@@ -87,9 +98,4 @@ std::vector<std::tuple<int, int, int>> open_file(std::string file_name) {
     }
     std::getline(file, str);
     return compute_bytes(std::move(str), width);
-}
-
-int main(){
-    open_file("../assets/terrain_copy.pgm");
-    return 0;
 }
