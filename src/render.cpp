@@ -97,7 +97,7 @@ void initBasicScene() {
 	auto pixmap = open_file("../assets/terrain_copy.pgm");
 
 	initScene(pixmap);
-	/*
+	
 	a_frame = createRepere(10.0);
 	//a_frame->createVAO();
 
@@ -112,10 +112,8 @@ void initBasicScene() {
 
 	glActiveTexture(GL_TEXTURE0);
 	//Load de l'image
-	int height = 10;
-	auto width = 10;
-	auto canals = 3;
-	auto image = stbi_load("../assets/herbe.png", &width, &height, &canals, 0);
+	int img_width, img_height, img_channels;
+	auto image = stbi_load("../assets/herbe.png", &img_width, &img_height, &img_channels, 0);
 	if (image != nullptr){
 		std::cout << "Image chargée correctement" << std::endl;
 	}
@@ -123,10 +121,10 @@ void initBasicScene() {
 	myTexture.createTexture();
 	myTexture.attachTexture();
 	myTexture.setParameters(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	myTexture.loadImage(width, height, canals, image);
+	myTexture.loadImage(img_width, img_height, img_channels, image);
 	myTexture.detachTexture();
 	stbi_image_free(image);
-	*/
+	
 }
 
 void renderBasicScene() {
@@ -134,13 +132,16 @@ void renderBasicScene() {
 
 	drawFrame();
 
-	myEngine.setFlatColor(1.0,1.0,0.0);
-	myEngine.mvMatrixStack.pushMatrix();
-		//myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
-		myEngine.mvMatrixStack.addHomothety(5.);
-		myEngine.updateMvMatrix();
-		drawTerrain();
-	myEngine.mvMatrixStack.popMatrix();
+	myEngine.setFlatColor(1.0, 1.0, 0.0);
+    myEngine.mvMatrixStack.pushMatrix();
+        myEngine.mvMatrixStack.addHomothety(5.);
+        myEngine.updateMvMatrix();
+        myEngine.activateTexturing(true);
+        myTexture.attachTexture();
+        drawTerrain();
+        myTexture.detachTexture();
+        myEngine.activateTexturing(false);
+    myEngine.mvMatrixStack.popMatrix();
 	
 	/*
 	//boule qui bouge pas
@@ -176,6 +177,8 @@ void renderBasicScene() {
 	myEngine.mvMatrixStack.popMatrix();
 	*/
 }
+
+
 
 int main(int /*argc*/, char** /*argv*/)
 {

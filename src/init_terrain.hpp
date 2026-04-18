@@ -3,8 +3,10 @@
 #include "../third_party/glbasimac/glbasimac/glbi_set_of_points.hpp"
 #include "../third_party/glbasimac/glbasimac/glbi_convex_2D_shape.hpp"
 #include "../third_party/glbasimac/tools/basic_mesh.hpp"
+#include "../third_party/glbasimac/tools/mesh.hpp"
 
 using namespace glbasimac;
+using namespace STP3D;
 
 /* Camera parameters and functions */
 static const float Z_NEAR {0.1f};
@@ -21,6 +23,9 @@ extern GLBI_Engine myEngine;
 
 extern std::vector<int> trees;
 extern int width;
+extern int height;
+
+extern StandardMesh* terrain;
 
 void initTerrain(std::vector<Vector3D> pixmap);
 

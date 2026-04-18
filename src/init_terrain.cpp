@@ -14,12 +14,13 @@ bool flag_anim_rot_arm {false};
 
 GLBI_Engine myEngine;
 GLBI_Set_Of_Points frame(3);
-GLBI_Set_Of_Points terrain(3);
+StandardMesh* terrain = nullptr;
 
 
 void initTerrain(std::vector<Vector3D> pixmap) {
     std::vector<float> terrainSet;
     std::vector<float> colorSet;
+	std::vector<float> uvSet;
     
     for (int y = 0; y < height - 1; y++) {
         for (int x = 0; x < width - 1; x++) {
@@ -42,12 +43,33 @@ void initTerrain(std::vector<Vector3D> pixmap) {
                 } else {
                     colorSet.insert(colorSet.end(), {0.0f, 0.0f, 1.0f});
                 }
+
+				int current_x = idx % width;
+                int current_y = idx / width;
+                
+               	float u = (float)current_x;
+				float v = (float)current_y;
+                
+                uvSet.push_back(u);
+                uvSet.push_back(v);
             }
         }
     }
-    terrain.initSet(terrainSet, colorSet);
-    terrain.changeNature(GL_TRIANGLES); 
+
+    // terrain.initSet(terrainSet, colorSet);
+    // terrain.changeNature(GL_TRIANGLES); 
+
+	unsigned int nb_vertices = terrainSet.size() / 3;
+	terrain = new StandardMesh(nb_vertices, GL_TRIANGLES);
+
+	terrain->addOneBuffer(0, 3, terrainSet.data(), "position", true);
+    terrain->addOneBuffer(1, 3, colorSet.data(), "color", true); 
+    terrain->addOneBuffer(2, 2, uvSet.data(), "texcoord", true);
+	
+	terrain->createVAO();
 }
+
+
 
 void initScene(std::vector<Vector3D> pixmap) {
 	frame.initSet({0,0,0, 10,0,0,
@@ -96,5 +118,7 @@ void drawFrame() {
 }
 
 void drawTerrain() {
-	terrain.drawSet();
+	if (terrain != nullptr) {
+        terrain->draw();
+    }
 }
