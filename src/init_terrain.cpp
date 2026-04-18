@@ -1,6 +1,5 @@
 #include "init_terrain.hpp"
 #include "open_file.hpp"
-#include <algorithm>
 
 /// Camera parameters
 float angle_theta {45.0};      // Angle between x axis and viewpoint
@@ -16,6 +15,10 @@ GLBI_Engine myEngine;
 GLBI_Set_Of_Points frame(3);
 StandardMesh* terrain = nullptr;
 
+StandardMesh* cone;
+IndexedMesh* cylinder;
+
+std::vector<Vector3D> pixelTrees;
 
 void initTerrain(std::vector<Vector3D> pixmap) {
     std::vector<float> terrainSet;
@@ -40,6 +43,7 @@ void initTerrain(std::vector<Vector3D> pixmap) {
 
                 if (std::find(trees.begin(), trees.end(), idx) != trees.end()) {
                     colorSet.insert(colorSet.end(), {1.0f, 1.0f, 1.0f});
+                    pixelTrees.emplace_back(Vector3D{pixmap[idx].x, pixmap[idx].z, pixmap[idx].y});
                 } else {
                     colorSet.insert(colorSet.end(), {0.0f, 0.0f, 1.0f});
                 }
@@ -57,64 +61,29 @@ void initTerrain(std::vector<Vector3D> pixmap) {
     }
 
     // terrain.initSet(terrainSet, colorSet);
-    // terrain.changeNature(GL_TRIANGLES); 
+    // terrain.changeNature(GL_TRIANGLES);
 
 	unsigned int nb_vertices = terrainSet.size() / 3;
 	terrain = new StandardMesh(nb_vertices, GL_TRIANGLES);
 
 	terrain->addOneBuffer(0, 3, terrainSet.data(), "position", true);
-    terrain->addOneBuffer(1, 3, colorSet.data(), "color", true); 
+    terrain->addOneBuffer(1, 3, colorSet.data(), "color", true);
     terrain->addOneBuffer(2, 2, uvSet.data(), "texcoord", true);
 	
 	terrain->createVAO();
 }
 
-
-
-void initScene(std::vector<Vector3D> pixmap) {
-	frame.initSet({0,0,0, 10,0,0,
-				0,0,0, 0,10,0,
-				0,0,0, 0,0,10},
-				{1.0,0.0,0.0,
-				1.0,0.0,0.0, 
-				0.,1.0,0.0,
-				0.,1.0,0.0,
-				0.,0.0,1.0,
-				0.,0.0,1.0});
-	frame.changeNature(GL_LINES);
-
-	/*
-    std::vector<float> terrainSet;
-	std::vector<float> colorSet;
-	int index = 0;
-    for (auto& vec : pixmap){
-		terrainSet.emplace_back(vec.x);
-		terrainSet.emplace_back(vec.z);
-		terrainSet.emplace_back(vec.y);
-
-		if (index == trees[0]){
-			colorSet.emplace_back(1);
-			colorSet.emplace_back(1);
-			colorSet.emplace_back(1);
-			trees.erase(trees.begin());
-		} else {
-			colorSet.emplace_back(1);
-			colorSet.emplace_back(0);
-			colorSet.emplace_back(0);
-		}
-
-		//std::cout << "(x, y, z) : " << vec.x << " " << vec.y << " " << vec.z << std::endl;
-		index++;
-    }
-
-    terrain.initSet(terrainSet, colorSet);
-	terrain.changeNature(GL_TRIANGLES);
-	*/
-	initTerrain(pixmap);
+void initTree(){
+	cone = basicCone(2.5, 1.5);
+	cone->createVAO();
+	cylinder = STP3D::basicCylinder(1.5, 0.5);
+	cylinder->createVAO();
 }
 
-void drawFrame() {
-	frame.drawSet();
+void initScene(std::vector<Vector3D> pixmap) {
+	initTerrain(pixmap);
+	initTree();
+	initTree();
 }
 
 void drawTerrain() {

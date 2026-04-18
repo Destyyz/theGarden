@@ -21,7 +21,12 @@ extern bool flag_anim_rot_arm;
 /* OpenGL Engine */
 extern GLBI_Engine myEngine;
 
+extern StandardMesh* cone;
+extern IndexedMesh* cylinder;
+
 extern std::vector<int> trees;
+extern std::vector<Vector3D> pixelTrees;
+
 extern int width;
 extern int height;
 
@@ -31,6 +36,8 @@ void initTerrain(std::vector<Vector3D> pixmap);
 
 void initScene(std::vector<Vector3D> pixmap);
 
-void drawFrame();
-
 void drawTerrain();
+
+void drawAllTrees();
+
+void initTree();

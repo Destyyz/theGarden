@@ -12,8 +12,8 @@
 
 
 extern std::vector<int> trees;
-extern int height;
-extern int width;
+extern int height, width;
+extern float Sh, Sp;
 
 std::vector<int> get_neighbors(int index, int width);
 

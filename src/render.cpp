@@ -22,6 +22,8 @@ static float aspectRatio = 1.0f;
 /* Minimal time wanted between two images */
 static const double FRAMERATE_IN_SECONDS = 1. / 30.;
 
+extern float Sh, Sp;
+extern int width;
 
 /* 3D Engine global variables */
 StandardMesh* a_frame;
@@ -97,18 +99,14 @@ void initBasicScene() {
 	auto pixmap = open_file("../assets/terrain_copy.pgm");
 
 	initScene(pixmap);
+
+	cone = basicCone(1, 1);
+	cone->createVAO();
+	cylinder = STP3D::basicCylinder(1, 1);
+	cylinder->createVAO();
 	
 	a_frame = createRepere(10.0);
-	//a_frame->createVAO();
-
-	
-	myEngine.switchToPhongShading();
-	myEngine.setLightPosition({5, 0, 15, 1.0});
-	myEngine.setLightIntensity({100, 100, 100});
-	myEngine.setShininess(32);
-	myEngine.setSpecularColor({1, 0, 0});
-	myEngine.switchToFlatShading();
-
+	a_frame->createVAO();
 
 	glActiveTexture(GL_TEXTURE0);
 	//Load de l'image
@@ -124,24 +122,44 @@ void initBasicScene() {
 	myTexture.loadImage(img_width, img_height, img_channels, image);
 	myTexture.detachTexture();
 	stbi_image_free(image);
-	
+}
+
+void renderTree(){
+	myEngine.setFlatColor(1.0,1.0,1.0);
+	myEngine.mvMatrixStack.pushMatrix();
+		myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
+		myEngine.mvMatrixStack.addHomothety({0.1, 0.3, 0.1});
+		myEngine.updateMvMatrix();
+		cylinder->draw();
+	myEngine.mvMatrixStack.popMatrix();
+	myEngine.mvMatrixStack.pushMatrix();
+		myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
+		myEngine.mvMatrixStack.addHomothety({0.5, 1., 0.5});
+		myEngine.mvMatrixStack.addTranslation({0., 0.3, 0.});
+		myEngine.updateMvMatrix();
+		cone->draw();
+	myEngine.mvMatrixStack.popMatrix();
 }
 
 void renderBasicScene() {
-	//a_frame->draw();
+	a_frame->draw();
 
-	drawFrame();
-
-	myEngine.setFlatColor(1.0, 1.0, 0.0);
-    myEngine.mvMatrixStack.pushMatrix();
-        myEngine.mvMatrixStack.addHomothety(5.);
-        myEngine.updateMvMatrix();
-        myEngine.activateTexturing(true);
-        myTexture.attachTexture();
-        drawTerrain();
-        myTexture.detachTexture();
-        myEngine.activateTexturing(false);
-    myEngine.mvMatrixStack.popMatrix();
+	
+	renderTree();
+	
+	/*
+	myEngine.mvMatrixStack.pushMatrix();
+		myEngine.mvMatrixStack.addHomothety(5.);
+		myEngine.mvMatrixStack.addTranslation({(width/2)*-Sp, -6.4, 0});
+		myEngine.updateMvMatrix();
+		myEngine.activateTexturing(true);
+		myTexture.attachTexture();
+		drawTerrain();
+		myTexture.detachTexture();
+		myEngine.activateTexturing(false);
+	myEngine.mvMatrixStack.popMatrix();
+	*/
+	
 	
 	/*
 	//boule qui bouge pas

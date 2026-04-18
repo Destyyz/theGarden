@@ -1,9 +1,8 @@
 #include "open_file.hpp"
 
 std::vector<int> trees;
-int height;
-int width;
-int gray;
+int height, width, gray;
+float Sh, Sp;
 
 std::vector<int> get_neighbors(int index, int width) {
     std::vector<int> neighbors;
@@ -26,8 +25,8 @@ std::vector<int> get_neighbors(int index, int width) {
 std::vector<Vector3D> compute_bytes(std::string str, int width) {
     
     std::vector<Vector3D> pixmap;
-    auto Sh = 0.004;
-    auto Sp = 0.05;
+    Sh = 0.004;
+    Sp = 0.05;
 
     std::vector<unsigned int> elevations;
     for (auto i : str){
