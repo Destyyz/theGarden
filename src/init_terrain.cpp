@@ -16,38 +16,36 @@ GLBI_Set_Of_Points frame(3);
 GLBI_Set_Of_Points terrain(3);
 
 
-void initTerrain(std::vector<Vector3D> pixmap){
-	std::vector<float> terrainSet;
-	std::vector<float> colorSet;
-	for (auto index = 0; index < pixmap.size()/4; index++){
-		int x = index % width;
-		int y = index / width;
+void initTerrain(std::vector<Vector3D> pixmap) {
+    std::vector<float> terrainSet;
+    std::vector<float> colorSet;
+    int treeCounter = 0;
+    for (int y = 0; y < width - 1; y++) {
+        for (int x = 0; x < width - 1; x++) {
+            
+            int i0 = y * width + x;
+            int i1 = (y + 1) * width + x;
+            int i2 = y * width + (x + 1);
+            int i3 = (y + 1) * width + (x + 1);
 
-		int directions[4][2] = {{1, 0}, {0, 0}, {1, 1}, {1, 0}};
+            int indices[4] = {i0, i1, i2, i3};
 
-		for (auto& dir : directions) {
-			int nline = x + dir[0];
-			int ncolumn = y + dir[1];
+            for (int idx : indices) {
+                terrainSet.push_back(pixmap[idx].x);
+                terrainSet.push_back(pixmap[idx].z);
+                terrainSet.push_back(pixmap[idx].y);
 
-			if (ncolumn >= 0 && ncolumn < width && nline >= 0 && nline < width) {
-				terrainSet.emplace_back(pixmap[nline * width + ncolumn].x);
-				terrainSet.emplace_back(pixmap[nline * width + ncolumn].z);
-				terrainSet.emplace_back(pixmap[nline * width + ncolumn].y);
-				if (index == trees[0]){
-					colorSet.emplace_back(1);
-					colorSet.emplace_back(1);
-					colorSet.emplace_back(1);
-					trees.erase(trees.begin());
-				} else {
-					colorSet.emplace_back(0);
-					colorSet.emplace_back(0);
-					colorSet.emplace_back(1);
-				}
-			}
-		}
-	}
-	terrain.initSet(terrainSet, colorSet);
-	terrain.changeNature(GL_TRIANGLE_STRIP);
+                if (treeCounter < trees.size() && idx == trees[treeCounter]) {
+                    colorSet.insert(colorSet.end(), {1.0f, 1.0f, 1.0f});
+                    treeCounter++; 
+                } else {
+                    colorSet.insert(colorSet.end(), {0.0f, 0.0f, 1.0f});
+                }
+            }
+        }
+    }
+    terrain.initSet(terrainSet, colorSet);
+    terrain.changeNature(GL_TRIANGLE_STRIP); 
 }
 
 void initScene(std::vector<Vector3D> pixmap) {

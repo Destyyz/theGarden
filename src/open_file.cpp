@@ -47,8 +47,6 @@ std::vector<Vector3D> compute_bytes(std::string str, int width) {
 
         if (elevations[i] == 0){
             trees.emplace_back(i);
-            std::cout << i << " : " << elevations[i] << std::endl;
-            //trees.add[i]
 
             unsigned int avg = 0;
             auto neighbors = get_neighbors(i, width);

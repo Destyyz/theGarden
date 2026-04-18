@@ -22,6 +22,8 @@ extern GLBI_Engine myEngine;
 extern std::vector<int> trees;
 extern int width;
 
+void initTerrain(std::vector<Vector3D> pixmap);
+
 void initScene(std::vector<Vector3D> pixmap);
 
 void drawFrame();
