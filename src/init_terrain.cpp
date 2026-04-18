@@ -1,5 +1,6 @@
 #include "init_terrain.hpp"
 #include "open_file.hpp"
+#include <algorithm>
 
 /// Camera parameters
 float angle_theta {45.0};      // Angle between x axis and viewpoint
@@ -19,25 +20,25 @@ GLBI_Set_Of_Points terrain(3);
 void initTerrain(std::vector<Vector3D> pixmap) {
     std::vector<float> terrainSet;
     std::vector<float> colorSet;
-    int treeCounter = 0;
-    for (int y = 0; y < width - 1; y++) {
+    
+    for (int y = 0; y < height - 1; y++) {
         for (int x = 0; x < width - 1; x++) {
-            
             int i0 = y * width + x;
             int i1 = (y + 1) * width + x;
             int i2 = y * width + (x + 1);
             int i3 = (y + 1) * width + (x + 1);
 
-            int indices[4] = {i0, i1, i2, i3};
+            // triangle 1 : i0, i1, i2
+            // triangle 2 : i2, i1, i3
+            int indices[6] = {i0, i1, i2, i2, i1, i3};
 
             for (int idx : indices) {
                 terrainSet.push_back(pixmap[idx].x);
                 terrainSet.push_back(pixmap[idx].z);
                 terrainSet.push_back(pixmap[idx].y);
 
-                if (treeCounter < trees.size() && idx == trees[treeCounter]) {
+                if (std::find(trees.begin(), trees.end(), idx) != trees.end()) {
                     colorSet.insert(colorSet.end(), {1.0f, 1.0f, 1.0f});
-                    treeCounter++; 
                 } else {
                     colorSet.insert(colorSet.end(), {0.0f, 0.0f, 1.0f});
                 }
@@ -45,7 +46,7 @@ void initTerrain(std::vector<Vector3D> pixmap) {
         }
     }
     terrain.initSet(terrainSet, colorSet);
-    terrain.changeNature(GL_TRIANGLE_STRIP); 
+    terrain.changeNature(GL_TRIANGLES); 
 }
 
 void initScene(std::vector<Vector3D> pixmap) {
