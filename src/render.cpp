@@ -29,6 +29,12 @@ extern int width;
 StandardMesh* a_frame;
 GLBI_Texture myTexture;
 
+// Pour le ?ptérodactyle? RAWR
+IndexedMesh* sphereMesh = nullptr;
+IndexedMesh* cubeMesh = nullptr;
+IndexedMesh* cylinderMesh = nullptr;
+StandardMesh* coneMesh = nullptr;
+
 bool flag_rotation = false;
 
 /* Error handling function */
@@ -97,16 +103,29 @@ void onMouseButton(GLFWwindow* window, int button, int action, int /*mods*/)
 
 void initBasicScene() {
 	auto pixmap = open_file("../assets/terrain_copy.pgm");
-
 	initScene(pixmap);
 
-	cone = basicCone(1, 1);
-	cone->createVAO();
-	cylinder = STP3D::basicCylinder(1, 1);
-	cylinder->createVAO();
+	sphereMesh = STP3D::basicSphere(1.0f, 20, 20);
+    sphereMesh->createVAO();
+
+    cubeMesh = STP3D::basicCube();
+    cubeMesh->createVAO();
+
+    cylinderMesh = STP3D::basicCylinder(1.0f, 1.0f);
+    cylinderMesh->createVAO();
+
+    coneMesh = STP3D::basicCone(1.0f, 1.0f);
+    coneMesh->createVAO();
+
+	// cone = basicCone(1, 1);
+	// cone->createVAO();
+	// cylinder = STP3D::basicCylinder(1, 1);
+	// cylinder->createVAO();
 	
 	a_frame = createRepere(10.0);
 	a_frame->createVAO();
+
+	myEngine.switchToFlatShading();
 
 	glActiveTexture(GL_TEXTURE0);
 	//Load de l'image
@@ -124,28 +143,131 @@ void initBasicScene() {
 	stbi_image_free(image);
 }
 
-void renderTree(){
-	myEngine.setFlatColor(1.0,1.0,1.0);
-	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
-		myEngine.mvMatrixStack.addHomothety({0.1, 0.3, 0.1});
-		myEngine.updateMvMatrix();
-		cylinder->draw();
-	myEngine.mvMatrixStack.popMatrix();
-	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
-		myEngine.mvMatrixStack.addHomothety({0.5, 1., 0.5});
-		myEngine.mvMatrixStack.addTranslation({0., 0.3, 0.});
-		myEngine.updateMvMatrix();
-		cone->draw();
-	myEngine.mvMatrixStack.popMatrix();
+void renderTree() {
+    myEngine.setFlatColor(1.0, 1.0, 1.0);
+    myEngine.mvMatrixStack.pushMatrix();
+        myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
+        myEngine.mvMatrixStack.addHomothety({0.1, 0.3, 0.1});
+        myEngine.updateMvMatrix();
+        cylinderMesh->draw();
+    myEngine.mvMatrixStack.popMatrix();
+    
+    myEngine.mvMatrixStack.pushMatrix();
+        myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
+        myEngine.mvMatrixStack.addHomothety({0.5, 1., 0.5});
+        myEngine.mvMatrixStack.addTranslation({0., 0.3, 0.});
+        myEngine.updateMvMatrix();
+        coneMesh->draw();
+    myEngine.mvMatrixStack.popMatrix();
 }
+
+
+
+void renderPtero() {
+    float time = glfwGetTime();
+    float wingAngle = sin(time * 5.0f) * 0.6f; 
+
+    myEngine.mvMatrixStack.pushMatrix();
+        myEngine.mvMatrixStack.addTranslation({0, 0, 5.0f}); 
+        
+        // CORPS
+        myEngine.mvMatrixStack.pushMatrix();
+            myEngine.mvMatrixStack.addHomothety({0.7, 1.8, 0.5}); 
+            myEngine.setFlatColor(0.5, 0.3, 0.1); 
+            myEngine.updateMvMatrix();
+            if(sphereMesh) sphereMesh->draw();
+        myEngine.mvMatrixStack.popMatrix();
+
+
+		////// TETE
+        myEngine.mvMatrixStack.pushMatrix();
+            myEngine.mvMatrixStack.addTranslation({0, 1.8f, 0.2f}); 
+            
+            // CRANE
+            myEngine.mvMatrixStack.pushMatrix();
+                myEngine.mvMatrixStack.addHomothety({0.4, 0.5, 0.4}); 
+                myEngine.setFlatColor(0.6, 0.4, 0.2); 
+                myEngine.updateMvMatrix();
+                if(sphereMesh) sphereMesh->draw();
+            myEngine.mvMatrixStack.popMatrix();
+
+            // BEC
+            myEngine.mvMatrixStack.pushMatrix();
+                myEngine.mvMatrixStack.addTranslation({0, 0.5f, 0});
+                myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0, 0}); 
+                myEngine.mvMatrixStack.addHomothety({0.15, 0.15, 1.5}); 
+                myEngine.setFlatColor(0.8, 0.7, 0.1); 
+                myEngine.updateMvMatrix();
+                if(coneMesh) coneMesh->draw();
+            myEngine.mvMatrixStack.popMatrix();
+
+            // YEUX
+            for(float side_eye : {-1.0f, 1.0f}) {
+                myEngine.mvMatrixStack.pushMatrix();
+                    myEngine.mvMatrixStack.addTranslation({0.3f * side_eye, 0.2f, 0.2f});
+                    myEngine.mvMatrixStack.addHomothety(0.1f); 
+                    myEngine.setFlatColor(1.0, 0.0, 0.0); 
+                    myEngine.updateMvMatrix();
+                    if(sphereMesh) sphereMesh->draw();
+                myEngine.mvMatrixStack.popMatrix();
+            }
+        myEngine.mvMatrixStack.popMatrix();
+
+
+        ////// AILES
+        for(float side : {-1.0f, 1.0f}) {
+            myEngine.mvMatrixStack.pushMatrix();
+                myEngine.mvMatrixStack.addTranslation({0.4f * side, 0, 0}); 
+                myEngine.mvMatrixStack.addRotation(wingAngle * side, {0, 1, 0}); 
+                
+                // DEBUT AILE (rectangle)
+                myEngine.mvMatrixStack.pushMatrix();
+                    myEngine.mvMatrixStack.addTranslation({0.8f * side, 0, 0}); 
+                    myEngine.mvMatrixStack.addHomothety({1.6, 0.9, 0}); 
+                    myEngine.setFlatColor(0.5, 0.3, 0.1);
+                    myEngine.updateMvMatrix();
+                    if(cubeMesh) cubeMesh->draw();
+                myEngine.mvMatrixStack.popMatrix();
+
+                myEngine.mvMatrixStack.addTranslation({1.6f * side, 0, 0}); 
+
+                // JOINTURE (triangle central)
+                myEngine.mvMatrixStack.pushMatrix();
+                    myEngine.mvMatrixStack.addRotation(-0.2f * side, {0, 0, 1}); 
+                    myEngine.mvMatrixStack.addRotation(M_PI_2 * side, {0, 1, 0}); 
+					myEngine.mvMatrixStack.addTranslation({0, -0.5, 0});
+                    myEngine.mvMatrixStack.addHomothety({0, 0.8, 1.6}); 
+        
+                    myEngine.setFlatColor(0.5, 0.3, 0.1); 
+                    myEngine.updateMvMatrix();
+                    if(coneMesh) coneMesh->draw();
+                myEngine.mvMatrixStack.popMatrix();
+
+                // FIN AILE (triangle externe)
+                myEngine.mvMatrixStack.pushMatrix();
+                    myEngine.mvMatrixStack.addRotation(-0.5f * side, {0, 0, 1}); 
+                    myEngine.mvMatrixStack.addTranslation({1.0f * side, 0, 0}); 
+                    myEngine.mvMatrixStack.addRotation(M_PI_2 * side, {0, 1, 0}); 
+                    myEngine.mvMatrixStack.addHomothety({0, 1.0, 2.0}); 
+                    
+                    myEngine.setFlatColor(0.5, 0.3, 0.1); 
+                    myEngine.updateMvMatrix();
+                    if(coneMesh) coneMesh->draw();
+                myEngine.mvMatrixStack.popMatrix();
+
+            myEngine.mvMatrixStack.popMatrix();
+        }
+    myEngine.mvMatrixStack.popMatrix();
+}
+
 
 void renderBasicScene() {
 	a_frame->draw();
 
-	
-	renderTree();
+	myEngine.switchToFlatShading();
+    renderPtero();
+
+	//renderTree();
 	
 	/*
 	myEngine.mvMatrixStack.pushMatrix();
