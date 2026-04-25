@@ -24,10 +24,7 @@ static const double FRAMERATE_IN_SECONDS = 1. / 30.;
 
 extern float Sh, Sp;
 extern int width;
-
-/* 3D Engine global variables */
-StandardMesh* a_frame;
-GLBI_Texture myTexture;
+extern std::vector<Vector3D> pixelTrees;
 
 // Pour le ?ptérodactyle? RAWR
 IndexedMesh* sphereMesh = nullptr;
@@ -35,7 +32,20 @@ IndexedMesh* cubeMesh = nullptr;
 IndexedMesh* cylinderMesh = nullptr;
 StandardMesh* coneMesh = nullptr;
 
+
+/* 3D Engine global variables */
+StandardMesh* a_frame;
+GLBI_Texture myTexture;
+GLBI_Engine myEngine;
+
 bool flag_rotation = false;
+
+// Camera parameters
+Vector3D pos_camera = Vector3D(50.0, 0, 50.0); // Position of the camera
+float angle_horizontal{90};					 // Angle between x axis and viewpoint
+float angle_vertical{-10};						 // Angle between z axis and viewpoint
+float speed{1.0};								 // Camera movement speed
+float day_speed = 20;
 
 /* Error handling function */
 void onError(int error, const char* description) {
@@ -55,7 +65,7 @@ void onKey(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods
 {
 	int is_pressed = (action == GLFW_PRESS); 
 	switch(key) {
-		case GLFW_KEY_A :
+		//case GLFW_KEY_A :
 		case GLFW_KEY_ESCAPE :
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
 			break;
@@ -86,7 +96,6 @@ void onKey(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods
 		case GLFW_KEY_T : 
 			if (is_pressed) flag_rotation = !flag_rotation;
 			break;
-		default: std::cerr<<"Touche non gérée "<<key<<std::endl;
 	}
 
 }
@@ -101,32 +110,76 @@ void onMouseButton(GLFWwindow* window, int button, int action, int /*mods*/)
 	}
 }
 
-void initBasicScene() {
-	auto pixmap = open_file("../assets/terrain_copy.pgm");
-	initScene(pixmap);
+void movement(GLFWwindow *window)
+{
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		angle_vertical += 1.0f * speed;
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		angle_vertical -= 1.0f * speed;
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		angle_horizontal += 1.0f * speed;
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		angle_horizontal -= 1.0f * speed;
 
-	sphereMesh = STP3D::basicSphere(1.0f, 20, 20);
-    sphereMesh->createVAO();
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		pos_camera[0] += cos(deg2rad(angle_horizontal)) * speed;
+		pos_camera[1] += sin(deg2rad(angle_horizontal)) * speed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		pos_camera[0] -= cos(deg2rad(angle_horizontal)) * speed;
+		pos_camera[1] -= sin(deg2rad(angle_horizontal)) * speed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		pos_camera[0] -= sin(deg2rad(angle_horizontal)) * speed;
+		pos_camera[1] += cos(deg2rad(angle_horizontal)) * speed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		pos_camera[0] += sin(deg2rad(angle_horizontal)) * speed;
+		pos_camera[1] -= cos(deg2rad(angle_horizontal)) * speed;
+	}
 
-    cubeMesh = STP3D::basicCube();
-    cubeMesh->createVAO();
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+		pos_camera[2] -= 1.0 * speed;
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		pos_camera[2] += 1.0 * speed;
+}
 
-    cylinderMesh = STP3D::basicCylinder(1.0f, 1.0f);
-    cylinderMesh->createVAO();
+void initTree(){
+	coneMesh = basicCone(1, 1);
+	coneMesh->createVAO();
+	cylinderMesh = STP3D::basicCylinder(1, 1);
+	cylinderMesh->createVAO();
+}
 
-    coneMesh = STP3D::basicCone(1.0f, 1.0f);
-    coneMesh->createVAO();
-
-	// cone = basicCone(1, 1);
-	// cone->createVAO();
-	// cylinder = STP3D::basicCylinder(1, 1);
-	// cylinder->createVAO();
-	
+void initFrame(){
 	a_frame = createRepere(10.0);
 	a_frame->createVAO();
+}
 
-	myEngine.switchToFlatShading();
+void initSun(){
+	sphereMesh = basicSphere(1);
+	sphereMesh->createVAO();
+}
 
+void initPtero(){
+    cubeMesh = STP3D::basicCube();
+    cubeMesh->createVAO();
+}
+
+void initBasicScene() {
+	auto pixmap = open_file("../assets/terrain_copy.pgm");
+
+	initTerrain(pixmap);
+
+	initTree();
+	initFrame();
+	initSun();
+    initPtero();
+	
 	glActiveTexture(GL_TEXTURE0);
 	//Load de l'image
 	int img_width, img_height, img_channels;
@@ -134,6 +187,11 @@ void initBasicScene() {
 	if (image != nullptr){
 		std::cout << "Image chargée correctement" << std::endl;
 	}
+
+	myEngine.switchToPhongShading();
+	myEngine.addALight(Vector4D{1., 1., 1., 0.}, Vector3D{1., 1., 1.});
+    myEngine.addALight(Vector4D{1., 1., 1., 1.}, Vector3D{1., 1., 1.});
+	myEngine.switchToFlatShading();
 
 	myTexture.createTexture();
 	myTexture.attachTexture();
@@ -143,31 +201,85 @@ void initBasicScene() {
 	stbi_image_free(image);
 }
 
-void renderTree() {
-    myEngine.setFlatColor(1.0, 1.0, 1.0);
-    myEngine.mvMatrixStack.pushMatrix();
-        myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
-        myEngine.mvMatrixStack.addHomothety({0.1, 0.3, 0.1});
-        myEngine.updateMvMatrix();
-        cylinderMesh->draw();
-    myEngine.mvMatrixStack.popMatrix();
-    
-    myEngine.mvMatrixStack.pushMatrix();
-        myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
-        myEngine.mvMatrixStack.addHomothety({0.5, 1., 0.5});
-        myEngine.mvMatrixStack.addTranslation({0., 0.3, 0.});
-        myEngine.updateMvMatrix();
-        coneMesh->draw();
-    myEngine.mvMatrixStack.popMatrix();
+void renderSun(){
+	// auto angle = glfwGetTime() * (day_speed/100);
+	// auto x = cos(angle)*(width+50) + (width/2);
+	// auto y = (width/2);
+	// auto z = sin(angle)*(width+50);
+
+	auto x = width+50 + (width/2);
+	auto y = (width/2);
+	auto z = width+50;
+	myEngine.setFlatColor(252/255., 249/255., 112/255.);
+	myEngine.mvMatrixStack.pushMatrix();
+		myEngine.mvMatrixStack.addTranslation(Vector3D(x, y, z));
+		myEngine.mvMatrixStack.addHomothety({15, 15, 15});
+		myEngine.switchToPhongShading();
+		myEngine.setLightPosition(Vector4D(x, y, z, 0.0), 0);
+		
+		myEngine.setLightIntensity(Vector3D((252/255.), (249/255.), (112/255.)), 0);
+		myEngine.switchToFlatShading();
+
+		myEngine.updateMvMatrix();
+		sphereMesh->draw();
+	myEngine.mvMatrixStack.popMatrix();
+	myEngine.setFlatColor(0., 0., 0.);
 }
 
+// void renderMoon(){
+// 	auto angle = glfwGetTime() * (day_speed/100) + M_PI;
+// 	auto x = cos(angle)*(width+50) + (width/2);
+// 	auto y = (width/2);
+// 	auto z = sin(angle)*(width+50);
+// 	myEngine.setFlatColor(255/255., 255/255., 210/255.);
+// 	myEngine.mvMatrixStack.pushMatrix();
+// 		myEngine.mvMatrixStack.addTranslation(Vector3D(x, y, z));
+// 		myEngine.mvMatrixStack.addHomothety({5, 5, 5});
+// 		myEngine.switchToPhongShading();
+// 		myEngine.setLightPosition(Vector4D(x, y, z, 0.0), 1);
+		
+// 		float intensite = (z > 0.0) ? 0.3f : 0.0f;
+// 		myEngine.setLightIntensity(Vector3D(intensite*(255/255.), intensite*(255/255.), intensite*(210/255.)), 1);
+// 		//myEngine.setLightIntensity(Vector3D(0.3*(255/255.), 0.3*(255/255.), 0.3*(210/255.)), 1);
+// 		myEngine.switchToFlatShading();
+
+// 		myEngine.updateMvMatrix();
+// 		sphereMesh->draw();
+// 	myEngine.mvMatrixStack.popMatrix();
+// 	myEngine.setFlatColor(0., 0., 0.);
+// }
+
+void renderTree(){
+	myEngine.setFlatColor(101/255.,67/255.,33/255.);
+
+	myEngine.mvMatrixStack.pushMatrix();
+		myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
+		myEngine.updateMvMatrix();
+
+		myEngine.mvMatrixStack.pushMatrix();
+			myEngine.mvMatrixStack.addHomothety({0.1, 0.8, 0.1});
+			myEngine.updateMvMatrix();
+			cylinderMesh->draw();
+		myEngine.mvMatrixStack.popMatrix();
+
+		myEngine.setFlatColor(55/255.,100/255.,2/255.);
+		myEngine.mvMatrixStack.pushMatrix();
+			myEngine.mvMatrixStack.addHomothety({0.5, 1.2, 0.5});
+			myEngine.mvMatrixStack.addTranslation({0., 0.4, 0.});
+			myEngine.updateMvMatrix();
+			coneMesh->draw();
+		myEngine.mvMatrixStack.popMatrix();
+	myEngine.mvMatrixStack.popMatrix();
+	myEngine.setFlatColor(1., 1., 1.);
+}
 
 void renderPtero() {
     float time = glfwGetTime();
     float wingAngle = sin(time * 5.0f) * 0.6f; 
 
     myEngine.mvMatrixStack.pushMatrix();
-        myEngine.mvMatrixStack.addTranslation({0, 0, 5.0f}); 
+        myEngine.mvMatrixStack.addTranslation({width/2, width/2, 25}); 
+        myEngine.mvMatrixStack.addHomothety({2.5, 2.5, 2.5}); 
         
         ////// CORPS
         myEngine.mvMatrixStack.pushMatrix();
@@ -176,6 +288,23 @@ void renderPtero() {
             myEngine.updateMvMatrix();
             sphereMesh->draw();
         myEngine.mvMatrixStack.popMatrix();
+
+        myEngine.setFlatColor(255/255., 128/255., 128/255.);
+        myEngine.mvMatrixStack.pushMatrix();
+
+            auto height = 1;
+            myEngine.mvMatrixStack.addTranslation(Vector3D(0, 0, height));
+            myEngine.mvMatrixStack.addHomothety({0.2, 0.2, 0.2}); 
+            myEngine.switchToPhongShading();
+            myEngine.setLightPosition(Vector4D(width/2, width/2, 25 + height, 1.0), 1);
+            
+            myEngine.setLightIntensity(Vector3D(100*(255/255.), 100*(128/255.), 100*(128/255.)), 1);
+            myEngine.switchToFlatShading();
+
+            myEngine.updateMvMatrix();
+            sphereMesh->draw();
+        myEngine.mvMatrixStack.popMatrix();
+        myEngine.setFlatColor(0., 0., 0.);
 
         ////// CRETE (DOS)
         for (float y_pos = -0.8f; y_pos <= 1.0f; y_pos += 0.4f) {
@@ -350,65 +479,50 @@ void renderPtero() {
     myEngine.mvMatrixStack.popMatrix();
 }
 
-
 void renderBasicScene() {
+	
 	a_frame->draw();
+	renderSun();
+	//renderMoon();
 
-	myEngine.switchToFlatShading();
-    renderPtero();
-
-	//renderTree();
-	
-	/*
+    myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addHomothety(5.);
-		myEngine.mvMatrixStack.addTranslation({(width/2)*-Sp, -6.4, 0});
-		myEngine.updateMvMatrix();
-		myEngine.activateTexturing(true);
-		myTexture.attachTexture();
-		drawTerrain();
-		myTexture.detachTexture();
-		myEngine.activateTexturing(false);
-	myEngine.mvMatrixStack.popMatrix();
-	*/
-	
-	
-	/*
-	//boule qui bouge pas
+    myEngine.setShininess(5.0f);
+	myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f));
+	myEngine.updateMvMatrix();
+    renderPtero();
+    myEngine.mvMatrixStack.popMatrix();
+	myEngine.switchToFlatShading();
+
+
 	myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.activateTexturing(true);
-		myTexture.attachTexture();
-		myEngine.setFlatColor(0, 1, 1);
-		myEngine.updateMvMatrix();
-		boule->draw();
-		myTexture.detachTexture();
-		myEngine.activateTexturing(false);
-	myEngine.mvMatrixStack.popMatrix();
-
-	myEngine.switchToFlatShading();
-
-	//boule qui bouge
-	myEngine.setFlatColor(1.0,1.0,0.0);
-	myEngine.mvMatrixStack.pushMatrix();
-	if (flag_rotation){
-		auto angle = glfwGetTime();
-		myEngine.mvMatrixStack.addTranslation(Vector3D(5*cos(angle), 5*sin(angle), 15.));
-		myEngine.switchToPhongShading();
-		myEngine.setLightPosition(Vector4D(5*cos(angle), 5*sin(angle), 15., 1.0));
-		myEngine.switchToFlatShading();
-
-	} else {
-		myEngine.mvMatrixStack.addTranslation(Vector3D(5, 0,15));
-	}
-	myEngine.mvMatrixStack.addHomothety(0.05);
+	myEngine.mvMatrixStack.addHomothety(10.);
+	myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0., -Sh*100});
+	myEngine.setShininess(5.0f);
+	myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f));
 	myEngine.updateMvMatrix();
-	boule->draw();
+	
+		for (auto tree : pixelTrees){
+			myEngine.mvMatrixStack.pushMatrix();
+				myEngine.mvMatrixStack.addTranslation(tree);
+				myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0, -0.1});
+				myEngine.updateMvMatrix();
+				renderTree();
+			myEngine.mvMatrixStack.popMatrix();
+		}
+
+		myEngine.mvMatrixStack.pushMatrix();
+			myEngine.updateMvMatrix();
+			myEngine.activateTexturing(true);
+			myTexture.attachTexture();
+			drawTerrain();
+			myTexture.detachTexture();
+			myEngine.activateTexturing(false);
+		myEngine.mvMatrixStack.popMatrix();
 	myEngine.mvMatrixStack.popMatrix();
-	*/
+	myEngine.switchToFlatShading();
 }
-
-
 
 int main(int /*argc*/, char** /*argv*/)
 {
@@ -455,6 +569,8 @@ int main(int /*argc*/, char** /*argv*/)
 	{
 		/* Get time (in second) at loop beginning */
 		double startTime = glfwGetTime();
+		movement(window);
+
 
 		/* Render begins here */
 		glClearColor(0.f,0.0f,0.2f,0.0f);
@@ -465,10 +581,10 @@ int main(int /*argc*/, char** /*argv*/)
 		/* Fix camera position */
 		myEngine.mvMatrixStack.loadIdentity();
 
-		Vector3D pos_camera = Vector3D(dist_zoom*cos(deg2rad(angle_theta))*cos(deg2rad(angle_phy)),
-										dist_zoom*sin(deg2rad(angle_theta))*cos(deg2rad(angle_phy)),
-										dist_zoom*sin(deg2rad(angle_phy)));
-		Vector3D viewed_point = Vector3D(0.0,0.0,0.0);
+		Vector3D viewed_point = Vector3D(pos_camera[0] + cos(deg2rad(angle_horizontal)) * cos(deg2rad(angle_vertical)),
+										 pos_camera[1] + sin(deg2rad(angle_horizontal)) * cos(deg2rad(angle_vertical)),
+										 pos_camera[2] + sin(deg2rad(angle_vertical)));
+
 		Vector3D up_vector = Vector3D(0.0,0.0,1.0); // DO NOT TOUCH IT
 		Matrix4D viewMatrix = Matrix4D::lookAt(pos_camera,viewed_point,up_vector);
 		myEngine.setViewMatrix(viewMatrix);

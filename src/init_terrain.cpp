@@ -11,13 +11,7 @@ float balance {0.0};
 bool flag_anim_rot_scale {false};
 bool flag_anim_rot_arm {false};
 
-GLBI_Engine myEngine;
-GLBI_Set_Of_Points frame(3);
 StandardMesh* terrain = nullptr;
-
-StandardMesh* cone;
-IndexedMesh* cylinder;
-
 std::vector<Vector3D> pixelTrees;
 
 void initTerrain(std::vector<Vector3D> pixmap) {
@@ -51,8 +45,8 @@ void initTerrain(std::vector<Vector3D> pixmap) {
 				int current_x = idx % width;
                 int current_y = idx / width;
                 
-               	float u = (float)current_x;
-				float v = (float)current_y;
+               	float u = (float) current_x;
+				float v = (float) current_y;
                 
                 uvSet.push_back(u);
                 uvSet.push_back(v);
@@ -71,19 +65,6 @@ void initTerrain(std::vector<Vector3D> pixmap) {
     terrain->addOneBuffer(2, 2, uvSet.data(), "texcoord", true);
 	
 	terrain->createVAO();
-}
-
-void initTree(){
-	cone = basicCone(2.5, 1.5);
-	cone->createVAO();
-	cylinder = STP3D::basicCylinder(1.5, 0.5);
-	cylinder->createVAO();
-}
-
-void initScene(std::vector<Vector3D> pixmap) {
-	initTerrain(pixmap);
-	initTree();
-	initTree();
 }
 
 void drawTerrain() {

@@ -18,12 +18,6 @@ extern float dist_zoom  ;      // Distance between origin and viewpoint
 extern bool flag_anim_rot_scale;
 extern bool flag_anim_rot_arm;
 
-/* OpenGL Engine */
-extern GLBI_Engine myEngine;
-
-extern StandardMesh* cone;
-extern IndexedMesh* cylinder;
-
 extern std::vector<int> trees;
 extern std::vector<Vector3D> pixelTrees;
 
@@ -34,10 +28,6 @@ extern StandardMesh* terrain;
 
 void initTerrain(std::vector<Vector3D> pixmap);
 
-void initScene(std::vector<Vector3D> pixmap);
-
 void drawTerrain();
 
 void drawAllTrees();
-
-void initTree();

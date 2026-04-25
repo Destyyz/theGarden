@@ -25,8 +25,8 @@ std::vector<int> get_neighbors(int index, int width) {
 std::vector<Vector3D> compute_bytes(std::string str, int width) {
     
     std::vector<Vector3D> pixmap;
-    Sh = 0.004;
-    Sp = 0.05;
+    Sh = 0.01;
+    Sp = 0.1;
 
     std::vector<unsigned int> elevations;
     for (auto i : str){
