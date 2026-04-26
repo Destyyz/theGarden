@@ -260,22 +260,30 @@ void renderSun(){
 	myEngine.setFlatColor(0., 0., 0.);
 }
 
-void renderPointLight(Vector3D vector){
-	std::vector<float> color = {1., 0., 0.};
-	auto offset = Vector3D{vector.x, vector.y-5.f, vector.z-4.f};
-	myEngine.setFlatColor(color[0], color[1], color[2]);
-	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addTranslation(offset);
-		myEngine.switchToPhongShading();
-		myEngine.setLightPosition(Vector4D(offset, 1.0), 1);
-		auto intensity = 1000;
-		myEngine.setLightIntensity(Vector3D(intensity*color[0], intensity*color[1], intensity*color[2]), 1);
-		myEngine.switchToFlatShading();
+void renderPointLight(Vector3D vector, float angle) { // <-- Ajout de l'angle ici
+    std::vector<float> color = {1., 0., 0.};
+    
+    float x_offset = 0.0f;
+    float y_offset = -5.0f;
+    float z_offset = -4.0f;
 
-		myEngine.updateMvMatrix();
-		sphereMesh->draw();
-	myEngine.mvMatrixStack.popMatrix();
-	myEngine.setFlatColor(0., 0., 0.);
+    float rotated_x = x_offset * cos(angle) - y_offset * sin(angle);
+    float rotated_y = x_offset * sin(angle) + y_offset * cos(angle);
+    auto offset = Vector3D{vector.x + rotated_x, vector.y + rotated_y, vector.z + z_offset};
+
+    myEngine.setFlatColor(color[0], color[1], color[2]);
+    myEngine.mvMatrixStack.pushMatrix();
+        myEngine.mvMatrixStack.addTranslation(offset);
+        myEngine.switchToPhongShading();
+        myEngine.setLightPosition(Vector4D(offset, 1.0), 1);
+        auto intensity = 1000;
+        myEngine.setLightIntensity(Vector3D(intensity*color[0], intensity*color[1], intensity*color[2]), 1);
+        myEngine.switchToFlatShading();
+
+        myEngine.updateMvMatrix();
+        sphereMesh->draw();
+    myEngine.mvMatrixStack.popMatrix();
+    myEngine.setFlatColor(0., 0., 0.);
 }
 
 void renderTree(){
@@ -540,10 +548,10 @@ void renderBasicScene() {
 
 	float x = x_rel + (width / 2.0f);
 	float y = y_rel + (width / 2.0f);
-	float z = 80.0f;
+	float z = 85.0f;
 	float angle = angleRotation - M_PI/2;
 
-	renderPointLight(Vector3D{x, y, z});
+	renderPointLight(Vector3D{x, y, z}, angle);
 
     shadePtero(Vector3D{x, y, z}, angle);
 
