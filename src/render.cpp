@@ -493,7 +493,45 @@ void renderBasicScene() {
 	
 	a_frame->draw();
 	renderSun();
-	//renderMoon();
+
+	float speed = day_speed; 
+	float L = 100.0f;
+	float R = 50.0f;
+	
+	float periCercle = M_PI * R;
+	float totalPeri = (2 * L) + (2 * periCercle);
+
+	float dist = fmod(glfwGetTime() * speed, totalPeri);
+	float x_rel, y_rel, angleRotation;
+
+	if (dist < L) {
+		x_rel = (L / 2.0f) - dist;
+		y_rel = R;
+		angleRotation = M_PI;
+	} else if (dist < L + periCercle) {
+		float d_arc = dist - L;
+		float theta = (M_PI / 2.0f) + (d_arc / R); 
+		x_rel = -L / 2.0f + cos(theta) * R;
+		y_rel = sin(theta) * R;
+		angleRotation = theta + (M_PI / 2.0f);
+	} else if (dist < 2 * L + periCercle) {
+		float d_droite = dist - (L + periCercle);
+		x_rel = -L / 2.0f + d_droite;
+		y_rel = -R;
+		angleRotation = 0.0f;
+	} else {
+		float d_arc = dist - (2 * L + periCercle);
+		float theta = (3.0f * M_PI / 2.0f) + (d_arc / R);
+		x_rel = L / 2.0f + cos(theta) * R;
+		y_rel = sin(theta) * R;
+		angleRotation = theta + (M_PI / 2.0f);
+	}
+
+	float x = x_rel + (width / 2.0f);
+	float y = y_rel + (width / 2.0f);
+	float z = 25.0f;
+
+	renderPointLight(Vector3D{x, y, z});
 
     myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
@@ -505,41 +543,39 @@ void renderBasicScene() {
 		renderPtero();
 	myEngine.mvMatrixStack.popMatrix();
 
-	// volcan :
-    myEngine.switchToPhongShading();
-    myEngine.setFlatColor(1.0, 1.0, 1.0);
-    myEngine.mvMatrixStack.pushMatrix();
-        myEngine.mvMatrixStack.addTranslation({-15.0f, -15.0f, 0.0f}); 
+	// // volcan :
+    // myEngine.switchToPhongShading();
+    // myEngine.setFlatColor(1.0, 1.0, 1.0);
+    // myEngine.mvMatrixStack.pushMatrix();
+    //     myEngine.mvMatrixStack.addTranslation({-15.0f, -15.0f, 0.0f}); 
         
-        myEngine.activateTexturing(true);
-        myEngine.updateMvMatrix();
-        rockTexture.attachTexture();
-        drawVolcano();
-        rockTexture.detachTexture();
+    //     myEngine.activateTexturing(true);
+    //     myEngine.updateMvMatrix();
+    //     rockTexture.attachTexture();
+    //     drawVolcano();
+    //     rockTexture.detachTexture();
 
-        myEngine.mvMatrixStack.pushMatrix();
-            myEngine.mvMatrixStack.addTranslation({0.0f, 0.0f, 7.0f}); 
-            myEngine.mvMatrixStack.addHomothety({1.0f, 1.0f, 0.05f}); 
-            myEngine.updateMvMatrix();
-            lavaTexture.attachTexture();
-            sphereMesh->draw();
-            lavaTexture.detachTexture();
-        myEngine.mvMatrixStack.popMatrix();
+    //     myEngine.mvMatrixStack.pushMatrix();
+    //         myEngine.mvMatrixStack.addTranslation({0.0f, 0.0f, 7.0f}); 
+    //         myEngine.mvMatrixStack.addHomothety({1.0f, 1.0f, 0.05f}); 
+    //         myEngine.updateMvMatrix();
+    //         lavaTexture.attachTexture();
+    //         sphereMesh->draw();
+    //         lavaTexture.detachTexture();
+    //     myEngine.mvMatrixStack.popMatrix();
 
-        myEngine.activateTexturing(false);
-    myEngine.mvMatrixStack.popMatrix();
-    myEngine.switchToFlatShading();
+    //     myEngine.activateTexturing(false);
+    // myEngine.mvMatrixStack.popMatrix();
+    // myEngine.switchToFlatShading();
 
 
 	myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
 	myEngine.mvMatrixStack.addHomothety(10.);
 	myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0., -Sh*100});
-	
 	myEngine.setShininess(5.0);
 	myEngine.setSpecularColor(STP3D::Vector3D(0/255, 0/255, 112/255));
 	myEngine.updateMvMatrix();
-	
 		for (auto tree : pixelTrees){
 			myEngine.mvMatrixStack.pushMatrix();
 				myEngine.mvMatrixStack.addTranslation(tree);
