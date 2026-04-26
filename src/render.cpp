@@ -37,6 +37,10 @@ StandardMesh* coneMesh = nullptr;
 StandardMesh* a_frame;
 GLBI_Texture myTexture;
 GLBI_Engine myEngine;
+GLBI_Texture rockTexture;
+GLBI_Texture lavaTexture;
+
+bool flag_rotation = false;
 
 // Camera parameters
 Vector3D pos_camera = Vector3D(50.0, 0, 50.0); // Position of the camera
@@ -138,6 +142,7 @@ void movement(GLFWwindow *window)
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		pos_camera[2] -= 1.0 * speed;
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		pos_camera[2] += 1.0 * speed;
@@ -174,6 +179,8 @@ void initBasicScene() {
 	initFrame();
 	initSun();
     initPtero();
+	// volcan :
+	initVolcano(150, 75); 
 	
 	glActiveTexture(GL_TEXTURE0);
 	//Load de l'image
@@ -194,6 +201,34 @@ void initBasicScene() {
 	myTexture.loadImage(img_width, img_height, img_channels, image);
 	myTexture.detachTexture();
 	stbi_image_free(image);
+
+	// volcan :
+	auto image_rock = stbi_load("../assets/volcano_rock.jpg", &img_width, &img_height, &img_channels, 0);
+    if (image_rock != nullptr){
+        std::cout << "Texture roche chargée correctement" << std::endl;
+        rockTexture.createTexture();
+        rockTexture.attachTexture();
+        rockTexture.setParameters(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        rockTexture.setParameters(GL_TEXTURE_WRAP_S, GL_REPEAT);
+        rockTexture.setParameters(GL_TEXTURE_WRAP_T, GL_REPEAT);
+        rockTexture.loadImage(img_width, img_height, img_channels, image_rock);
+        rockTexture.detachTexture();
+        stbi_image_free(image_rock);
+    }
+
+	// lave volcan :
+	auto image_lava = stbi_load("../assets/lava.png", &img_width, &img_height, &img_channels, 0);
+    if (image_lava != nullptr){
+        std::cout << "Texture lave chargee correctement" << std::endl;
+        lavaTexture.createTexture();
+        lavaTexture.attachTexture();
+        lavaTexture.setParameters(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        lavaTexture.setParameters(GL_TEXTURE_WRAP_S, GL_REPEAT);
+        lavaTexture.setParameters(GL_TEXTURE_WRAP_T, GL_REPEAT);
+        lavaTexture.loadImage(img_width, img_height, img_channels, image_lava);
+        lavaTexture.detachTexture();
+        stbi_image_free(image_lava);
+    }
 }
 
 void renderSun(){
@@ -270,7 +305,8 @@ void renderPtero() {
     float wingAngle = sin(time * 5.0f) * 0.6f; 
 
     myEngine.mvMatrixStack.pushMatrix();
-        myEngine.mvMatrixStack.addHomothety({1.5, 1.5, 1.5}); 
+        myEngine.mvMatrixStack.addTranslation({width/2.0f, width/2.0f, 25.0f}); 
+        myEngine.mvMatrixStack.addHomothety({2.5, 2.5, 2.5}); 
         
         ////// CORPS
         myEngine.mvMatrixStack.pushMatrix();
@@ -457,57 +493,42 @@ void renderBasicScene() {
 	
 	a_frame->draw();
 	renderSun();
+	//renderMoon();
 
-	float speed = day_speed; 
-	float L = 100.0f;
-	float R = 50.0f;
-	
-	float periCercle = M_PI * R;
-	float totalPeri = (2 * L) + (2 * periCercle);
-
-	float dist = fmod(glfwGetTime() * speed, totalPeri);
-	float x_rel, y_rel, angleRotation;
-
-	if (dist < L) {
-		x_rel = (L / 2.0f) - dist;
-		y_rel = R;
-		angleRotation = M_PI;
-	} else if (dist < L + periCercle) {
-		float d_arc = dist - L;
-		float theta = (M_PI / 2.0f) + (d_arc / R); 
-		x_rel = -L / 2.0f + cos(theta) * R;
-		y_rel = sin(theta) * R;
-		angleRotation = theta + (M_PI / 2.0f);
-	} else if (dist < 2 * L + periCercle) {
-		float d_droite = dist - (L + periCercle);
-		x_rel = -L / 2.0f + d_droite;
-		y_rel = -R;
-		angleRotation = 0.0f;
-	} else {
-		float d_arc = dist - (2 * L + periCercle);
-		float theta = (3.0f * M_PI / 2.0f) + (d_arc / R);
-		x_rel = L / 2.0f + cos(theta) * R;
-		y_rel = sin(theta) * R;
-		angleRotation = theta + (M_PI / 2.0f);
-	}
-
-	float x = x_rel + (width / 2.0f);
-	float y = y_rel + (width / 2.0f);
-	float z = 25.0f;
-
-	renderPointLight(Vector3D{x, y, z});
-
-	myEngine.switchToPhongShading();
+    myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
 		myEngine.setShininess(2.0);
 		myEngine.mvMatrixStack.addTranslation(Vector3D{x, y, z});
-		
 		myEngine.mvMatrixStack.addRotation(angleRotation - M_PI_2, Vector3D{0, 0, 1});
 		myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f)); 
 		myEngine.updateMvMatrix();
 		renderPtero();
 	myEngine.mvMatrixStack.popMatrix();
-	myEngine.switchToFlatShading();
+
+	// volcan :
+    myEngine.switchToPhongShading();
+    myEngine.setFlatColor(1.0, 1.0, 1.0);
+    myEngine.mvMatrixStack.pushMatrix();
+        myEngine.mvMatrixStack.addTranslation({-15.0f, -15.0f, 0.0f}); 
+        
+        myEngine.activateTexturing(true);
+        myEngine.updateMvMatrix();
+        rockTexture.attachTexture();
+        drawVolcano();
+        rockTexture.detachTexture();
+
+        myEngine.mvMatrixStack.pushMatrix();
+            myEngine.mvMatrixStack.addTranslation({0.0f, 0.0f, 7.0f}); 
+            myEngine.mvMatrixStack.addHomothety({1.0f, 1.0f, 0.05f}); 
+            myEngine.updateMvMatrix();
+            lavaTexture.attachTexture();
+            sphereMesh->draw();
+            lavaTexture.detachTexture();
+        myEngine.mvMatrixStack.popMatrix();
+
+        myEngine.activateTexturing(false);
+    myEngine.mvMatrixStack.popMatrix();
+    myEngine.switchToFlatShading();
 
 
 	myEngine.switchToPhongShading();
@@ -528,14 +549,14 @@ void renderBasicScene() {
 			myEngine.mvMatrixStack.popMatrix();
 		}
 
-		myEngine.mvMatrixStack.pushMatrix();
-			myEngine.updateMvMatrix();
-			myEngine.activateTexturing(true);
-			myTexture.attachTexture();
-			drawTerrain();
-			myTexture.detachTexture();
-			myEngine.activateTexturing(false);
-		myEngine.mvMatrixStack.popMatrix();
+			myEngine.mvMatrixStack.pushMatrix();
+				myEngine.updateMvMatrix();
+				myEngine.activateTexturing(true);
+				myTexture.attachTexture();
+				drawTerrain();
+				myTexture.detachTexture();
+				myEngine.activateTexturing(false);
+			myEngine.mvMatrixStack.popMatrix();
 	myEngine.mvMatrixStack.popMatrix();
 	myEngine.switchToFlatShading();
 }
