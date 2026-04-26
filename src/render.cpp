@@ -26,7 +26,7 @@ extern float Sh, Sp;
 extern int width;
 extern std::vector<Vector3D> pixelTrees;
 
-// Pour le ?ptérodactyle? RAWR
+// Pour le ptérodactyle RAWR
 IndexedMesh* sphereMesh = nullptr;
 IndexedMesh* cubeMesh = nullptr;
 IndexedMesh* cylinderMesh = nullptr;
@@ -37,8 +37,6 @@ StandardMesh* coneMesh = nullptr;
 StandardMesh* a_frame;
 GLBI_Texture myTexture;
 GLBI_Engine myEngine;
-
-bool flag_rotation = false;
 
 // Camera parameters
 Vector3D pos_camera = Vector3D(50.0, 0, 50.0); // Position of the camera
@@ -93,9 +91,6 @@ void onKey(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods
         case GLFW_KEY_RIGHT :
             angle_theta -= 1.0;
             break;
-		case GLFW_KEY_T : 
-			if (is_pressed) flag_rotation = !flag_rotation;
-			break;
 	}
 
 }
@@ -142,7 +137,7 @@ void movement(GLFWwindow *window)
 		pos_camera[1] -= cos(deg2rad(angle_horizontal)) * speed;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		pos_camera[2] -= 1.0 * speed;
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		pos_camera[2] += 1.0 * speed;
@@ -207,17 +202,20 @@ void renderSun(){
 	// auto y = (width/2);
 	// auto z = sin(angle)*(width+50);
 
-	auto x = width+50 + (width/2);
+	auto x = (width/2);
 	auto y = (width/2);
 	auto z = width+50;
-	myEngine.setFlatColor(252/255., 249/255., 112/255.);
+
+	std::vector<float> color = {(252/255.), (249/255.), (112/255.)};
+	myEngine.setFlatColor(color[0], color[1], color[2]);
 	myEngine.mvMatrixStack.pushMatrix();
 		myEngine.mvMatrixStack.addTranslation(Vector3D(x, y, z));
-		myEngine.mvMatrixStack.addHomothety({15, 15, 15});
+		myEngine.mvMatrixStack.addHomothety({30, 30, 30});
 		myEngine.switchToPhongShading();
-		myEngine.setLightPosition(Vector4D(x, y, z, 0.0), 0);
-		
-		myEngine.setLightIntensity(Vector3D((252/255.), (249/255.), (112/255.)), 0);
+		myEngine.setLightPosition(Vector4D(0, 0, 1, 0.0), 0);
+
+		auto intensity = 2;
+		myEngine.setLightIntensity(Vector3D(intensity*color[0], intensity*color[1], intensity*color[2]), 0);
 		myEngine.switchToFlatShading();
 
 		myEngine.updateMvMatrix();
@@ -226,28 +224,22 @@ void renderSun(){
 	myEngine.setFlatColor(0., 0., 0.);
 }
 
-// void renderMoon(){
-// 	auto angle = glfwGetTime() * (day_speed/100) + M_PI;
-// 	auto x = cos(angle)*(width+50) + (width/2);
-// 	auto y = (width/2);
-// 	auto z = sin(angle)*(width+50);
-// 	myEngine.setFlatColor(255/255., 255/255., 210/255.);
-// 	myEngine.mvMatrixStack.pushMatrix();
-// 		myEngine.mvMatrixStack.addTranslation(Vector3D(x, y, z));
-// 		myEngine.mvMatrixStack.addHomothety({5, 5, 5});
-// 		myEngine.switchToPhongShading();
-// 		myEngine.setLightPosition(Vector4D(x, y, z, 0.0), 1);
-		
-// 		float intensite = (z > 0.0) ? 0.3f : 0.0f;
-// 		myEngine.setLightIntensity(Vector3D(intensite*(255/255.), intensite*(255/255.), intensite*(210/255.)), 1);
-// 		//myEngine.setLightIntensity(Vector3D(0.3*(255/255.), 0.3*(255/255.), 0.3*(210/255.)), 1);
-// 		myEngine.switchToFlatShading();
+void renderPointLight(Vector3D vector){
+	myEngine.setFlatColor(1, 1, 1);
+	myEngine.mvMatrixStack.pushMatrix();
+		myEngine.mvMatrixStack.addTranslation({vector.x, vector.y+1.2f, vector.z+2.4f});
+		myEngine.mvMatrixStack.addHomothety({0.2, 0.2, 0.2});
+		myEngine.switchToPhongShading();
+		myEngine.setLightPosition(Vector4D(Vector3D{vector.x, vector.y+1.2f, vector.z+2.4f}, 1.0), 1);
+		auto intensity = 10;
+		myEngine.setLightIntensity(Vector3D(intensity*1, intensity*1, intensity*1), 1);
+		myEngine.switchToFlatShading();
 
-// 		myEngine.updateMvMatrix();
-// 		sphereMesh->draw();
-// 	myEngine.mvMatrixStack.popMatrix();
-// 	myEngine.setFlatColor(0., 0., 0.);
-// }
+		myEngine.updateMvMatrix();
+		sphereMesh->draw();
+	myEngine.mvMatrixStack.popMatrix();
+	myEngine.setFlatColor(0., 0., 0.);
+}
 
 void renderTree(){
 	myEngine.setFlatColor(101/255.,67/255.,33/255.);
@@ -278,8 +270,7 @@ void renderPtero() {
     float wingAngle = sin(time * 5.0f) * 0.6f; 
 
     myEngine.mvMatrixStack.pushMatrix();
-        myEngine.mvMatrixStack.addTranslation({width/2, width/2, 25}); 
-        myEngine.mvMatrixStack.addHomothety({2.5, 2.5, 2.5}); 
+        myEngine.mvMatrixStack.addHomothety({1.5, 1.5, 1.5}); 
         
         ////// CORPS
         myEngine.mvMatrixStack.pushMatrix();
@@ -288,23 +279,6 @@ void renderPtero() {
             myEngine.updateMvMatrix();
             sphereMesh->draw();
         myEngine.mvMatrixStack.popMatrix();
-
-        myEngine.setFlatColor(255/255., 128/255., 128/255.);
-        myEngine.mvMatrixStack.pushMatrix();
-
-            auto height = 1;
-            myEngine.mvMatrixStack.addTranslation(Vector3D(0, 0, height));
-            myEngine.mvMatrixStack.addHomothety({0.2, 0.2, 0.2}); 
-            myEngine.switchToPhongShading();
-            myEngine.setLightPosition(Vector4D(width/2, width/2, 25 + height, 1.0), 1);
-            
-            myEngine.setLightIntensity(Vector3D(100*(255/255.), 100*(128/255.), 100*(128/255.)), 1);
-            myEngine.switchToFlatShading();
-
-            myEngine.updateMvMatrix();
-            sphereMesh->draw();
-        myEngine.mvMatrixStack.popMatrix();
-        myEngine.setFlatColor(0., 0., 0.);
 
         ////// CRETE (DOS)
         for (float y_pos = -0.8f; y_pos <= 1.0f; y_pos += 0.4f) {
@@ -361,7 +335,7 @@ void renderPtero() {
                 myEngine.updateMvMatrix();
                 coneMesh->draw();
             myEngine.mvMatrixStack.popMatrix();
-
+			
             // YEUX
             for(float side_eye : {-1.0f, 1.0f}) {
                 myEngine.mvMatrixStack.pushMatrix();
@@ -483,15 +457,56 @@ void renderBasicScene() {
 	
 	a_frame->draw();
 	renderSun();
-	//renderMoon();
 
-    myEngine.switchToPhongShading();
+	float speed = day_speed; 
+	float L = 100.0f;
+	float R = 50.0f;
+	
+	float periCercle = M_PI * R;
+	float totalPeri = (2 * L) + (2 * periCercle);
+
+	float dist = fmod(glfwGetTime() * speed, totalPeri);
+	float x_rel, y_rel, angleRotation;
+
+	if (dist < L) {
+		x_rel = (L / 2.0f) - dist;
+		y_rel = R;
+		angleRotation = M_PI;
+	} else if (dist < L + periCercle) {
+		float d_arc = dist - L;
+		float theta = (M_PI / 2.0f) + (d_arc / R); 
+		x_rel = -L / 2.0f + cos(theta) * R;
+		y_rel = sin(theta) * R;
+		angleRotation = theta + (M_PI / 2.0f);
+	} else if (dist < 2 * L + periCercle) {
+		float d_droite = dist - (L + periCercle);
+		x_rel = -L / 2.0f + d_droite;
+		y_rel = -R;
+		angleRotation = 0.0f;
+	} else {
+		float d_arc = dist - (2 * L + periCercle);
+		float theta = (3.0f * M_PI / 2.0f) + (d_arc / R);
+		x_rel = L / 2.0f + cos(theta) * R;
+		y_rel = sin(theta) * R;
+		angleRotation = theta + (M_PI / 2.0f);
+	}
+
+	float x = x_rel + (width / 2.0f);
+	float y = y_rel + (width / 2.0f);
+	float z = 25.0f;
+
+	renderPointLight(Vector3D{x, y, z});
+
+	myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
-    myEngine.setShininess(5.0f);
-	myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f));
-	myEngine.updateMvMatrix();
-    renderPtero();
-    myEngine.mvMatrixStack.popMatrix();
+		myEngine.setShininess(2.0);
+		myEngine.mvMatrixStack.addTranslation(Vector3D{x, y, z});
+		
+		myEngine.mvMatrixStack.addRotation(angleRotation - M_PI_2, Vector3D{0, 0, 1});
+		myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f)); 
+		myEngine.updateMvMatrix();
+		renderPtero();
+	myEngine.mvMatrixStack.popMatrix();
 	myEngine.switchToFlatShading();
 
 
@@ -499,8 +514,9 @@ void renderBasicScene() {
 	myEngine.mvMatrixStack.pushMatrix();
 	myEngine.mvMatrixStack.addHomothety(10.);
 	myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0., -Sh*100});
-	myEngine.setShininess(5.0f);
-	myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f));
+	
+	myEngine.setShininess(5.0);
+	myEngine.setSpecularColor(STP3D::Vector3D(0/255, 0/255, 112/255));
 	myEngine.updateMvMatrix();
 	
 		for (auto tree : pixelTrees){

@@ -4,6 +4,7 @@
 #include "../third_party/glbasimac/glbasimac/glbi_convex_2D_shape.hpp"
 #include "../third_party/glbasimac/tools/basic_mesh.hpp"
 #include "../third_party/glbasimac/tools/mesh.hpp"
+#include <cmath>
 
 using namespace glbasimac;
 using namespace STP3D;
@@ -23,8 +24,10 @@ extern std::vector<Vector3D> pixelTrees;
 
 extern int width;
 extern int height;
+extern float Sh, Sp;
 
 extern StandardMesh* terrain;
+
 
 void initTerrain(std::vector<Vector3D> pixmap);
 
