@@ -31,3 +31,15 @@ void initTerrain(std::vector<Vector3D> pixmap);
 void drawTerrain();
 
 void drawAllTrees();
+
+void volcanoGrid(int res_tour, int res_haut, int nb_lines, int res_int, std::vector<std::vector<float>>& grille_R, std::vector<std::vector<float>>& grille_H);
+
+void buildVolcMesh(int res_tour, int nb_lines, 
+                    const std::vector<std::vector<float>>& grille_R, 
+                    const std::vector<std::vector<float>>& grille_H, 
+                    std::vector<float>& volcanoSet, std::vector<float>& normalSet, 
+                    std::vector<float>& colorSet, std::vector<float>& uvSet);
+
+void initVolcano(int res_tour, int res_haut);
+
+void drawVolcano();

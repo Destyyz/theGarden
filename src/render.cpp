@@ -37,6 +37,7 @@ StandardMesh* coneMesh = nullptr;
 StandardMesh* a_frame;
 GLBI_Texture myTexture;
 GLBI_Engine myEngine;
+GLBI_Texture rockTexture;
 
 bool flag_rotation = false;
 
@@ -142,7 +143,7 @@ void movement(GLFWwindow *window)
 		pos_camera[1] -= cos(deg2rad(angle_horizontal)) * speed;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		pos_camera[2] -= 1.0 * speed;
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		pos_camera[2] += 1.0 * speed;
@@ -179,6 +180,8 @@ void initBasicScene() {
 	initFrame();
 	initSun();
     initPtero();
+	// volcan :
+	initVolcano(150, 75); 
 	
 	glActiveTexture(GL_TEXTURE0);
 	//Load de l'image
@@ -199,6 +202,20 @@ void initBasicScene() {
 	myTexture.loadImage(img_width, img_height, img_channels, image);
 	myTexture.detachTexture();
 	stbi_image_free(image);
+
+	// volcan :
+	auto image_rock = stbi_load("../assets/volcano_rock.jpg", &img_width, &img_height, &img_channels, 0);
+    if (image_rock != nullptr){
+        std::cout << "Texture roche chargée correctement" << std::endl;
+        rockTexture.createTexture();
+        rockTexture.attachTexture();
+        rockTexture.setParameters(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        rockTexture.setParameters(GL_TEXTURE_WRAP_S, GL_REPEAT);
+        rockTexture.setParameters(GL_TEXTURE_WRAP_T, GL_REPEAT);
+        rockTexture.loadImage(img_width, img_height, img_channels, image_rock);
+        rockTexture.detachTexture();
+        stbi_image_free(image_rock);
+    }
 }
 
 void renderSun(){
@@ -278,7 +295,7 @@ void renderPtero() {
     float wingAngle = sin(time * 5.0f) * 0.6f; 
 
     myEngine.mvMatrixStack.pushMatrix();
-        myEngine.mvMatrixStack.addTranslation({width/2, width/2, 25}); 
+        myEngine.mvMatrixStack.addTranslation({width/2.0f, width/2.0f, 25.0f}); 
         myEngine.mvMatrixStack.addHomothety({2.5, 2.5, 2.5}); 
         
         ////// CORPS
@@ -487,39 +504,53 @@ void renderBasicScene() {
 
     myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
-    myEngine.setShininess(5.0f);
-	myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f));
-	myEngine.updateMvMatrix();
-    renderPtero();
+		myEngine.setShininess(5.0f);
+		myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f));
+		myEngine.updateMvMatrix();
+		renderPtero();
+    myEngine.mvMatrixStack.popMatrix();
+	myEngine.switchToFlatShading();
+
+	// volcan :
+	myEngine.switchToPhongShading();
+	myEngine.setFlatColor(1.0, 1.0, 1.0);
+    myEngine.mvMatrixStack.pushMatrix();
+        myEngine.mvMatrixStack.addTranslation({-15.0f, -15.0f, 0.0f}); 
+        myEngine.updateMvMatrix();
+        myEngine.activateTexturing(true);
+        rockTexture.attachTexture();
+        drawVolcano();
+        rockTexture.detachTexture();
+        myEngine.activateTexturing(false);
     myEngine.mvMatrixStack.popMatrix();
 	myEngine.switchToFlatShading();
 
 
 	myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
-	myEngine.mvMatrixStack.addHomothety(10.);
-	myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0., -Sh*100});
-	myEngine.setShininess(5.0f);
-	myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f));
-	myEngine.updateMvMatrix();
-	
-		for (auto tree : pixelTrees){
-			myEngine.mvMatrixStack.pushMatrix();
-				myEngine.mvMatrixStack.addTranslation(tree);
-				myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0, -0.1});
-				myEngine.updateMvMatrix();
-				renderTree();
-			myEngine.mvMatrixStack.popMatrix();
-		}
+		myEngine.mvMatrixStack.addHomothety(10.);
+		myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0., -Sh*100});
+		myEngine.setShininess(5.0f);
+		myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f));
+		myEngine.updateMvMatrix();
+		
+			for (auto tree : pixelTrees){
+				myEngine.mvMatrixStack.pushMatrix();
+					myEngine.mvMatrixStack.addTranslation(tree);
+					myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0, -0.1});
+					myEngine.updateMvMatrix();
+					renderTree();
+				myEngine.mvMatrixStack.popMatrix();
+			}
 
-		myEngine.mvMatrixStack.pushMatrix();
-			myEngine.updateMvMatrix();
-			myEngine.activateTexturing(true);
-			myTexture.attachTexture();
-			drawTerrain();
-			myTexture.detachTexture();
-			myEngine.activateTexturing(false);
-		myEngine.mvMatrixStack.popMatrix();
+			myEngine.mvMatrixStack.pushMatrix();
+				myEngine.updateMvMatrix();
+				myEngine.activateTexturing(true);
+				myTexture.attachTexture();
+				drawTerrain();
+				myTexture.detachTexture();
+				myEngine.activateTexturing(false);
+			myEngine.mvMatrixStack.popMatrix();
 	myEngine.mvMatrixStack.popMatrix();
 	myEngine.switchToFlatShading();
 }
