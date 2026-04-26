@@ -38,13 +38,12 @@ std::vector<Vector3D> compute_bytes(std::string str, int width) {
     for (auto val : elevations){
         min = val < min ? val : min;
     }
-    //std::cout << "elevations : " << elevations.size() << std::endl;
 
     for (long unsigned int i = 0; i < elevations.size(); i++){
         auto x = i %  width;
         auto y = i / width;
 
-        if (elevations[i] == 0){
+        if (elevations[i] == 0) {
             trees.emplace_back(i);
 
             unsigned int avg = 0;
@@ -57,7 +56,6 @@ std::vector<Vector3D> compute_bytes(std::string str, int width) {
         }
         
         Vector3D tuple = Vector3D{x*Sp, elevations[i]*Sh - min, y*Sp};
-        //std::cout << "(x, y, z) : " << std::get<0>(tuple) << " " << std::get<1>(tuple) << " " << std::get<2>(tuple) << std::endl;
         pixmap.emplace_back(tuple);
     }
     return pixmap;
@@ -80,7 +78,7 @@ std::vector<Vector3D> open_file(std::string file_name) {
             continue;
         }
 
-        if (line == 1){
+        if (line == 1) {
             height = std::stof(str);
             width = std::stof(str);
             std::cout << "Height : " << height << std::endl;

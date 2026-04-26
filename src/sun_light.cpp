@@ -13,32 +13,26 @@ void initSun() {
     sphereMesh->createVAO();
 }
 
-void renderSun(){
-	// auto angle = glfwGetTime() * (day_speed/100);
-	// auto x = cos(angle)*(width+50) + (width/2);
-	// auto y = (width/2);
-	// auto z = sin(angle)*(width+50);
+void renderSun() {
+    auto x = (width / 2);
+    auto y = (width / 2);
+    auto z = width + 50;
 
-	auto x = (width / 2);
-	auto y = (width / 2);
-	auto z = width + 50;
+    std::vector<float> color = {(252/255.), (249/255.), (112/255.)};
+    myEngine.setFlatColor(color[0], color[1], color[2]);
+    myEngine.mvMatrixStack.pushMatrix();
+        myEngine.mvMatrixStack.addTranslation(Vector3D(x, y, z));
+        myEngine.mvMatrixStack.addHomothety({30, 30, 30});
 
-	std::vector<float> color = {(252/255.), (249/255.), (112/255.)};
-	myEngine.setFlatColor(color[0], color[1], color[2]);
-	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addTranslation(Vector3D(x, y, z));
-		myEngine.mvMatrixStack.addHomothety({30, 30, 30});
+        myEngine.switchToPhongShading();
+        myEngine.setLightPosition(Vector4D(0.4f, 0.4f, 1.0f, 0.0f), 0);
+        auto intensity = 1.4f;
+        myEngine.setLightIntensity(Vector3D(intensity*color[0], intensity*color[1], intensity*color[2]), 0);
+        myEngine.switchToFlatShading();
 
-		myEngine.switchToPhongShading();
-		myEngine.setLightPosition(Vector4D(0, 0, 1, 0.0), 0);
-		auto intensity = 1;
-		myEngine.setLightIntensity(Vector3D(intensity*color[0], intensity*color[1], intensity*color[2]), 0);
-		myEngine.switchToFlatShading();
-		
-		myEngine.updateMvMatrix();
-		sphereMesh->draw();
-	myEngine.mvMatrixStack.popMatrix();
-	myEngine.setFlatColor(0., 0., 0.);
+        myEngine.updateMvMatrix();
+        sphereMesh->draw();
+    myEngine.mvMatrixStack.popMatrix();
 }
 
 void renderPointLight(Vector3D vector, float angle) {

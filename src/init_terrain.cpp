@@ -1,5 +1,8 @@
 #include "init_terrain.hpp"
 #include "open_file.hpp"
+#include <algorithm>
+
+extern float Sh, Sp; 
 
 /// Camera parameters
 float angle_theta {45.0};      // Angle between x axis and viewpoint
@@ -17,7 +20,7 @@ std::vector<Vector3D> pixelTrees;
 void initTerrain(std::vector<Vector3D> pixmap) {
     std::vector<float> terrainSet;
     std::vector<float> colorSet;
-	std::vector<float> uvSet;
+    std::vector<float> uvSet;
     std::vector<float> normalSet;
     
     for (int y = 0; y < height - 1; y++) {
@@ -27,11 +30,11 @@ void initTerrain(std::vector<Vector3D> pixmap) {
             int i2 = y * width + (x + 1);
             int i3 = (y + 1) * width + (x + 1);
 
-            int indices[6] = {i0, i1, i2, i2, i1, i3};
+            int indices[6] = {i0, i2, i1, i2, i3, i1};
 
             for (int idx : indices) {
                 terrainSet.push_back(pixmap[idx].x);
-                terrainSet.push_back(pixmap[idx].z);
+                terrainSet.push_back(pixmap[idx].z); 
                 terrainSet.push_back(pixmap[idx].y);
 
                 if (std::find(trees.begin(), trees.end(), idx) != trees.end()) {
@@ -43,40 +46,38 @@ void initTerrain(std::vector<Vector3D> pixmap) {
 
 				float current_u = (float) (idx % width);
                 int current_v = (float) (idx / width);
-                uvSet.push_back(current_u);
-                uvSet.push_back(current_v);
+                uvSet.push_back((float)current_u);
+                uvSet.push_back((float)current_v);
 
+                float h_act = pixmap[idx].y; 
+                auto gauche = (current_u > 0) ? pixmap[current_v * width + (current_u - 1)].y : h_act;
+                auto droite = (current_u < width - 1) ? pixmap[current_v * width + (current_u + 1)].y : h_act;
+                auto haut =  (current_v > 0) ? pixmap[(current_v - 1) * width + current_u].y : h_act;
+                auto bas = (current_v < height - 1) ? pixmap[(current_v + 1) * width + current_u].y : h_act;
 
-                auto haut = (y-1) < 0 ? pixmap[y * width + x].z : pixmap[(y-1) * width + x].z;
-                auto bas = (y+1) > width ? pixmap[y * width + x].z : pixmap[(y+1) * width + x].z;
-                auto gauche = (x-1) < 0 ? pixmap[y * width + x].z : pixmap[y * width + (x-1)].z;
-                auto droite = (x+1) > width ? pixmap[y * width + x].z : pixmap[y * width + (x+1)].z;
-
-                auto normalX = (haut - bas)*Sh / 2*Sp;
-                auto normalY = (gauche - droite)*Sh / 2*Sp;
+                auto normalX = (gauche - droite) / (2*Sp);
+                auto normalY = (haut - bas) / (2*Sp);
                 auto normalZ = 1.f;
                 auto normal = Vector3D{normalX, normalY, normalZ};
                 normal.normalize();
 
                 normalSet.push_back(normal.x);
-                normalSet.push_back(normal.z);
                 normalSet.push_back(normal.y);
+                normalSet.push_back(normal.z);
             }
         }
     }
-	unsigned int nb_vertices = terrainSet.size() / 3;
-	terrain = new StandardMesh(nb_vertices, GL_TRIANGLES);
-	terrain->addOneBuffer(0, 3, terrainSet.data(), "position", true);
-    terrain->addOneBuffer(1, 3, colorSet.data(), "color", true);
-    terrain->addOneBuffer(2, 2, uvSet.data(), "texcoord", true);
-    terrain->addOneBuffer(3, 3, normalSet.data(), "normal", true);
     
-	terrain->createVAO();
+    unsigned int nb_vertices = terrainSet.size() / 3;
+    terrain = new StandardMesh(nb_vertices, GL_TRIANGLES);
+    terrain->addOneBuffer(0, 3, terrainSet.data(), "position", true);
+    terrain->addOneBuffer(1, 3, normalSet.data(), "normals", true);
+    terrain->addOneBuffer(2, 2, uvSet.data(), "uvs", true);
+    terrain->createVAO();
 }
 
 void drawTerrain() {
-	if (terrain != nullptr) {
+    if (terrain != nullptr) {
         terrain->draw();
     }
 }
-
