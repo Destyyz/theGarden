@@ -49,35 +49,31 @@ void initTerrain(std::vector<Vector3D> pixmap) {
                 uvSet.push_back(current_u);
                 uvSet.push_back(current_v);
 
-                auto haut = (y-1) < 0 ? 0 : pixmap[(y-1) * width + x].z;
-                auto bas = (y+1) > width ? 0 : pixmap[(y+1) * width + x].z;
-                auto gauche = pixmap[y * width + (x-1)].z;
-                auto droite = pixmap[y * width + (x+1)].z;
+
+                auto haut = (y-1) < 0 ? pixmap[y * width + x].z : pixmap[(y-1) * width + x].z;
+                auto bas = (y+1) > width ? pixmap[y * width + x].z : pixmap[(y+1) * width + x].z;
+                auto gauche = (x-1) < 0 ? pixmap[y * width + x].z : pixmap[y * width + (x-1)].z;
+                auto droite = (x+1) > width ? pixmap[y * width + x].z : pixmap[y * width + (x+1)].z;
 
                 auto normalX = (haut - bas)*Sh / 2*Sp;
                 auto normalY = (gauche - droite)*Sh / 2*Sp;
-                auto normalZ = 1;
-                auto distance = sqrt(normalX*normalX + normalY*normalY + normalZ*normalZ);
+                auto normalZ = 1.f;
+                auto normal = Vector3D{normalX, normalY, normalZ};
+                normal.normalize();
 
-                normalX /= distance;
-                normalZ /= distance;
-                normalY /= distance;
-
-                normalSet.push_back(normalX);
-                normalSet.push_back(normalZ);
-                normalSet.push_back(normalY);
+                normalSet.push_back(normal.x);
+                normalSet.push_back(normal.z);
+                normalSet.push_back(normal.y);
             }
         }
     }
-
 	unsigned int nb_vertices = terrainSet.size() / 3;
 	terrain = new StandardMesh(nb_vertices, GL_TRIANGLES);
-
 	terrain->addOneBuffer(0, 3, terrainSet.data(), "position", true);
     terrain->addOneBuffer(1, 3, colorSet.data(), "color", true);
     terrain->addOneBuffer(2, 2, uvSet.data(), "texcoord", true);
     terrain->addOneBuffer(3, 3, normalSet.data(), "normal", true);
-	
+    
 	terrain->createVAO();
 }
 

@@ -246,13 +246,14 @@ void renderSun(){
 	myEngine.mvMatrixStack.pushMatrix();
 		myEngine.mvMatrixStack.addTranslation(Vector3D(x, y, z));
 		myEngine.mvMatrixStack.addHomothety({30, 30, 30});
+
 		myEngine.switchToPhongShading();
 		myEngine.setLightPosition(Vector4D(0, 0, 1, 0.0), 0);
-
-		auto intensity = 2;
+		auto intensity = 1;
 		myEngine.setLightIntensity(Vector3D(intensity*color[0], intensity*color[1], intensity*color[2]), 0);
 		myEngine.switchToFlatShading();
 
+		
 		myEngine.updateMvMatrix();
 		sphereMesh->draw();
 	myEngine.mvMatrixStack.popMatrix();
@@ -260,14 +261,15 @@ void renderSun(){
 }
 
 void renderPointLight(Vector3D vector){
-	myEngine.setFlatColor(1, 1, 1);
+	std::vector<float> color = {1., 0., 0.};
+	auto offset = Vector3D{vector.x, vector.y-5.f, vector.z-4.f};
+	myEngine.setFlatColor(color[0], color[1], color[2]);
 	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addTranslation({vector.x, vector.y+1.2f, vector.z+2.4f});
-		myEngine.mvMatrixStack.addHomothety({0.2, 0.2, 0.2});
+		myEngine.mvMatrixStack.addTranslation(offset);
 		myEngine.switchToPhongShading();
-		myEngine.setLightPosition(Vector4D(Vector3D{vector.x, vector.y+1.2f, vector.z+2.4f}, 1.0), 1);
-		auto intensity = 10;
-		myEngine.setLightIntensity(Vector3D(intensity*1, intensity*1, intensity*1), 1);
+		myEngine.setLightPosition(Vector4D(offset, 1.0), 1);
+		auto intensity = 1000;
+		myEngine.setLightIntensity(Vector3D(intensity*color[0], intensity*color[1], intensity*color[2]), 1);
 		myEngine.switchToFlatShading();
 
 		myEngine.updateMvMatrix();
@@ -488,12 +490,22 @@ void renderPtero() {
     myEngine.mvMatrixStack.popMatrix();
 }
 
+void shadePtero(Vector3D vector, float angle){
+	myEngine.switchToPhongShading();
+	myEngine.mvMatrixStack.pushMatrix();
+		myEngine.mvMatrixStack.addTranslation(vector);
+		myEngine.mvMatrixStack.addRotation(angle, Vector3D{0, 0, 1});
+		myEngine.updateMvMatrix();
+		renderPtero();
+	myEngine.mvMatrixStack.popMatrix();
+	myEngine.switchToFlatShading();
+}
+
 void renderBasicScene() {
-	
 	a_frame->draw();
 	renderSun();
 
-	float speed = day_speed; 
+	float speed = day_speed;
 	float L = 100.0f;
 	float R = 50.0f;
 	
@@ -528,23 +540,15 @@ void renderBasicScene() {
 
 	float x = x_rel + (width / 2.0f);
 	float y = y_rel + (width / 2.0f);
-	float z = 25.0f;
+	float z = 80.0f;
+	float angle = angleRotation - M_PI/2;
 
 	renderPointLight(Vector3D{x, y, z});
 
-    myEngine.switchToPhongShading();
-	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.setShininess(2.0);
-		myEngine.mvMatrixStack.addTranslation(Vector3D{x, y, z});
-		myEngine.mvMatrixStack.addRotation(angleRotation - M_PI_2, Vector3D{0, 0, 1});
-		myEngine.setSpecularColor(STP3D::Vector3D(0.1f, 0.1f, 0.1f)); 
-		myEngine.updateMvMatrix();
-		renderPtero();
-	myEngine.mvMatrixStack.popMatrix();
+    shadePtero(Vector3D{x, y, z}, angle);
 
 	// volcan :
     myEngine.switchToPhongShading();
-    myEngine.setFlatColor(1.0, 1.0, 1.0);
     myEngine.mvMatrixStack.pushMatrix();
 		myEngine.mvMatrixStack.addTranslation({width * 0.78f, width * 0.35f, -3.0f});
         myEngine.mvMatrixStack.addHomothety({9.5f, 9.5f, 9.5f});
@@ -573,8 +577,6 @@ void renderBasicScene() {
 	myEngine.mvMatrixStack.pushMatrix();
 	myEngine.mvMatrixStack.addHomothety(10.);
 	myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0., -Sh*100});
-	myEngine.setShininess(5.0);
-	myEngine.setSpecularColor(STP3D::Vector3D(0/255, 0/255, 112/255));
 	myEngine.updateMvMatrix();
 		for (auto tree : pixelTrees){
 			myEngine.mvMatrixStack.pushMatrix();
@@ -585,14 +587,14 @@ void renderBasicScene() {
 			myEngine.mvMatrixStack.popMatrix();
 		}
 
-			myEngine.mvMatrixStack.pushMatrix();
-				myEngine.updateMvMatrix();
-				myEngine.activateTexturing(true);
-				myTexture.attachTexture();
-				drawTerrain();
-				myTexture.detachTexture();
-				myEngine.activateTexturing(false);
-			myEngine.mvMatrixStack.popMatrix();
+		myEngine.mvMatrixStack.pushMatrix();
+			myEngine.updateMvMatrix();
+			myEngine.activateTexturing(true);
+			myTexture.attachTexture();
+			drawTerrain();
+			myTexture.detachTexture();
+			myEngine.activateTexturing(false);
+		myEngine.mvMatrixStack.popMatrix();
 	myEngine.mvMatrixStack.popMatrix();
 	myEngine.switchToFlatShading();
 }
