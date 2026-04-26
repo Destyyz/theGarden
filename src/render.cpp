@@ -4,7 +4,11 @@
 #include "glbasimac/glbi_engine.hpp"
 #include "glbasimac/glbi_texture.hpp"
 #include "init_terrain.hpp"
+#include "init_volcano.hpp"
+#include "init_ptero.hpp"
+#include "init_tree.hpp"
 #include "open_file.hpp"
+#include "sun_light.hpp"
 #include "tools/shaders.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "tools/stb_image.h"
@@ -148,26 +152,9 @@ void movement(GLFWwindow *window)
 		pos_camera[2] += 1.0 * speed;
 }
 
-void initTree(){
-	coneMesh = basicCone(1, 1);
-	coneMesh->createVAO();
-	cylinderMesh = STP3D::basicCylinder(1, 1);
-	cylinderMesh->createVAO();
-}
-
 void initFrame(){
 	a_frame = createRepere(10.0);
 	a_frame->createVAO();
-}
-
-void initSun(){
-	sphereMesh = basicSphere(1);
-	sphereMesh->createVAO();
-}
-
-void initPtero(){
-    cubeMesh = STP3D::basicCube();
-    cubeMesh->createVAO();
 }
 
 void initBasicScene() {
@@ -231,276 +218,6 @@ void initBasicScene() {
     }
 }
 
-void renderSun(){
-	// auto angle = glfwGetTime() * (day_speed/100);
-	// auto x = cos(angle)*(width+50) + (width/2);
-	// auto y = (width/2);
-	// auto z = sin(angle)*(width+50);
-
-	auto x = (width/2);
-	auto y = (width/2);
-	auto z = width+50;
-
-	std::vector<float> color = {(252/255.), (249/255.), (112/255.)};
-	myEngine.setFlatColor(color[0], color[1], color[2]);
-	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addTranslation(Vector3D(x, y, z));
-		myEngine.mvMatrixStack.addHomothety({30, 30, 30});
-
-		myEngine.switchToPhongShading();
-		myEngine.setLightPosition(Vector4D(0, 0, 1, 0.0), 0);
-		auto intensity = 1;
-		myEngine.setLightIntensity(Vector3D(intensity*color[0], intensity*color[1], intensity*color[2]), 0);
-		myEngine.switchToFlatShading();
-
-		
-		myEngine.updateMvMatrix();
-		sphereMesh->draw();
-	myEngine.mvMatrixStack.popMatrix();
-	myEngine.setFlatColor(0., 0., 0.);
-}
-
-void renderPointLight(Vector3D vector){
-	std::vector<float> color = {1., 0., 0.};
-	auto offset = Vector3D{vector.x, vector.y-5.f, vector.z-4.f};
-	myEngine.setFlatColor(color[0], color[1], color[2]);
-	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addTranslation(offset);
-		myEngine.switchToPhongShading();
-		myEngine.setLightPosition(Vector4D(offset, 1.0), 1);
-		auto intensity = 1000;
-		myEngine.setLightIntensity(Vector3D(intensity*color[0], intensity*color[1], intensity*color[2]), 1);
-		myEngine.switchToFlatShading();
-
-		myEngine.updateMvMatrix();
-		sphereMesh->draw();
-	myEngine.mvMatrixStack.popMatrix();
-	myEngine.setFlatColor(0., 0., 0.);
-}
-
-void renderTree(){
-	myEngine.setFlatColor(101/255.,67/255.,33/255.);
-
-	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0., 0.});
-		myEngine.updateMvMatrix();
-
-		myEngine.mvMatrixStack.pushMatrix();
-			myEngine.mvMatrixStack.addHomothety({0.1, 0.8, 0.1});
-			myEngine.updateMvMatrix();
-			cylinderMesh->draw();
-		myEngine.mvMatrixStack.popMatrix();
-
-		myEngine.setFlatColor(55/255.,100/255.,2/255.);
-		myEngine.mvMatrixStack.pushMatrix();
-			myEngine.mvMatrixStack.addHomothety({0.5, 1.2, 0.5});
-			myEngine.mvMatrixStack.addTranslation({0., 0.4, 0.});
-			myEngine.updateMvMatrix();
-			coneMesh->draw();
-		myEngine.mvMatrixStack.popMatrix();
-	myEngine.mvMatrixStack.popMatrix();
-	myEngine.setFlatColor(1., 1., 1.);
-}
-
-void renderPtero() {
-    float time = glfwGetTime();
-    float wingAngle = sin(time * 5.0f) * 0.6f; 
-
-    myEngine.mvMatrixStack.pushMatrix();
-        myEngine.mvMatrixStack.addHomothety({2.5, 2.5, 2.5}); 
-        
-        ////// CORPS
-        myEngine.mvMatrixStack.pushMatrix();
-            myEngine.mvMatrixStack.addHomothety({0.7, 1.8, 0.5}); 
-            myEngine.setFlatColor(0.25, 0.45, 0.15); 
-            myEngine.updateMvMatrix();
-            sphereMesh->draw();
-        myEngine.mvMatrixStack.popMatrix();
-
-        ////// CRETE (DOS)
-        for (float y_pos = -0.8f; y_pos <= 1.0f; y_pos += 0.4f) {
-            myEngine.mvMatrixStack.pushMatrix();
-                myEngine.mvMatrixStack.addTranslation({0, y_pos, 0.35f}); 
-                myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0, 0}); 
-                myEngine.mvMatrixStack.addHomothety({0.12, 0.35, 0.55}); 
-                myEngine.setFlatColor(0.10, 0.30, 0); 
-                myEngine.updateMvMatrix();
-                coneMesh->draw();
-            myEngine.mvMatrixStack.popMatrix();
-        }
-
-        ////// COU
-        myEngine.mvMatrixStack.pushMatrix();
-            myEngine.mvMatrixStack.addTranslation({0, 1.2f, 0.15f}); 
-            myEngine.mvMatrixStack.addRotation(0.6f, {1, 0, 0}); 
-            myEngine.mvMatrixStack.addTranslation({0, 0.35f, -0.2}); 
-            myEngine.mvMatrixStack.addHomothety({0.3, 0.9, 0.3}); 
-            myEngine.setFlatColor(0.25, 0.45, 0.15);
-            myEngine.updateMvMatrix();
-            sphereMesh->draw();
-        myEngine.mvMatrixStack.popMatrix();
-
-        ////// TETE
-        myEngine.mvMatrixStack.pushMatrix();
-            myEngine.mvMatrixStack.addTranslation({0, 2.1f, 0.66f}); 
-            myEngine.mvMatrixStack.addRotation(-0.3f, {1, 0, 0}); 
-            
-            // CRANE
-            myEngine.mvMatrixStack.pushMatrix();
-                myEngine.mvMatrixStack.addHomothety({0.35, 0.75, 0.35}); 
-                myEngine.setFlatColor(0.25, 0.45, 0.15); 
-                myEngine.updateMvMatrix();
-                sphereMesh->draw();
-            myEngine.mvMatrixStack.popMatrix();
-
-            // CORNE
-            myEngine.mvMatrixStack.pushMatrix();
-                myEngine.mvMatrixStack.addTranslation({0, -0.35f, 0}); 
-                myEngine.mvMatrixStack.addRotation((M_PI / 2) + 1.2f, {1, 0, 0}); 
-                myEngine.mvMatrixStack.addHomothety({0.25, 1.3, 0.25}); 
-                myEngine.setFlatColor(0.10, 0.30, 0);
-                myEngine.updateMvMatrix();
-                coneMesh->draw();
-            myEngine.mvMatrixStack.popMatrix();
-
-            // BEC
-            myEngine.mvMatrixStack.pushMatrix();
-                myEngine.mvMatrixStack.addTranslation({0, 0.75f, 0});
-                myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0, 0}); 
-                myEngine.mvMatrixStack.addHomothety({0.15, 0.15, 1.5}); 
-                myEngine.setFlatColor(0.8, 0.6, 0.3); 
-                myEngine.updateMvMatrix();
-                coneMesh->draw();
-            myEngine.mvMatrixStack.popMatrix();
-			
-            // YEUX
-            for(float side_eye : {-1.0f, 1.0f}) {
-                myEngine.mvMatrixStack.pushMatrix();
-                    myEngine.mvMatrixStack.addTranslation({0.25f * side_eye, 0.3f, 0.2f});
-                    myEngine.mvMatrixStack.addHomothety(0.15f); 
-                    myEngine.setFlatColor(0.18, 0.08, 0.04);
-                    myEngine.updateMvMatrix();
-                    sphereMesh->draw();
-                myEngine.mvMatrixStack.popMatrix();
-            }
-        myEngine.mvMatrixStack.popMatrix();
-
-
-        ////// PATTES ARRIERES
-        for(float side : {-1.0f, 1.0f}) {
-            myEngine.mvMatrixStack.pushMatrix();
-                myEngine.mvMatrixStack.addTranslation({0.4f * side, -0.7f, -0.3f}); 
-                myEngine.mvMatrixStack.addRotation(-0.15f * side, {0, 0, 1}); 
-                myEngine.mvMatrixStack.addRotation(0.8f, {1, 0, 0}); 
-                
-                myEngine.mvMatrixStack.pushMatrix();
-                    myEngine.mvMatrixStack.addTranslation({0, -0.7f, 0.2}); 
-                    myEngine.mvMatrixStack.addHomothety({0.2, 1.4, 0.2}); 
-                    myEngine.setFlatColor(0.25, 0.45, 0.15); 
-                    myEngine.updateMvMatrix();
-                    cubeMesh->draw();
-                myEngine.mvMatrixStack.popMatrix();
-
-                myEngine.mvMatrixStack.pushMatrix();
-                    myEngine.mvMatrixStack.addTranslation({0, -1.4f, 0.2}); 
-                    myEngine.mvMatrixStack.addHomothety({0.25, 0.4, 0.1}); 
-                    myEngine.setFlatColor(0.10, 0.30, 0);
-                    myEngine.updateMvMatrix();
-                    cubeMesh->draw();
-                myEngine.mvMatrixStack.popMatrix();
-            myEngine.mvMatrixStack.popMatrix();
-        }
-
-        ////// AILES
-        for(float side : {-1.0f, 1.0f}) {
-            myEngine.mvMatrixStack.pushMatrix();
-                myEngine.mvMatrixStack.addTranslation({0.4f * side, 0, 0}); 
-                myEngine.mvMatrixStack.addRotation(wingAngle * side, {0, 1, 0}); 
-                
-                // OS PRINCIPAL
-                myEngine.mvMatrixStack.pushMatrix();
-                    myEngine.mvMatrixStack.addTranslation({1.5f * side, 0.45f, 0}); 
-                    myEngine.mvMatrixStack.addHomothety({2.8, 0.15, 0.15}); 
-                    myEngine.setFlatColor(0.10, 0.30, 0); 
-                    myEngine.updateMvMatrix();
-                    cubeMesh->draw();
-                myEngine.mvMatrixStack.popMatrix();
-
-                // MEMBRANE INTERNE
-                myEngine.mvMatrixStack.pushMatrix();
-                    myEngine.mvMatrixStack.addTranslation({0.8f * side, 0, 0}); 
-                    myEngine.mvMatrixStack.addHomothety({1.6, 0.9, 0.1}); 
-                    myEngine.setFlatColor(0.45, 0.65, 0.35); 
-                    myEngine.updateMvMatrix();
-                    cubeMesh->draw();
-                myEngine.mvMatrixStack.popMatrix();
-
-                myEngine.mvMatrixStack.addTranslation({1.6f * side, 0, 0}); 
-
-                // GRIFFES DES AILES
-                for(int i : {0, 1, 2}) {
-                    myEngine.mvMatrixStack.pushMatrix();
-                        myEngine.mvMatrixStack.addTranslation({1.3f * side, 0.4f, 0}); 
-                        myEngine.mvMatrixStack.addRotation(0.35f * i * side, {0, 0, 1}); 
-                        myEngine.mvMatrixStack.addRotation(M_PI_2, {1, 0, 0}); 
-                        myEngine.mvMatrixStack.addHomothety({0.05, 0.15, 0.6}); 
-                        myEngine.mvMatrixStack.addTranslation({0, 0, -0.3f});
-                        myEngine.setFlatColor(0.10, 0.30, 0);
-                        myEngine.updateMvMatrix();
-                        coneMesh->draw();
-                    myEngine.mvMatrixStack.popMatrix();
-                }
-
-                // OS SECONDAIRE
-                myEngine.mvMatrixStack.pushMatrix();
-                    myEngine.mvMatrixStack.addRotation(-0.9f * side, {0, 0, 1}); 
-                    myEngine.mvMatrixStack.addTranslation({1.5f * side, 1.25f, 0}); 
-                    myEngine.mvMatrixStack.addHomothety({2.8, 0.12, 0.12}); 
-                    myEngine.setFlatColor(0.10, 0.30, 0); // Vert sombre
-                    myEngine.updateMvMatrix();
-                    cubeMesh->draw();
-                myEngine.mvMatrixStack.popMatrix();
-
-                // JOINTURE
-                myEngine.mvMatrixStack.pushMatrix();
-                    myEngine.mvMatrixStack.addRotation(-0.2f * side, {0, 0, 1}); 
-                    myEngine.mvMatrixStack.addRotation(M_PI_2 * side, {0, 1, 0}); 
-                    myEngine.mvMatrixStack.addTranslation({0, -0.5, 0});
-                    myEngine.mvMatrixStack.addHomothety({0.1, 0.8, 1.6}); 
-                    myEngine.setFlatColor(0.45, 0.65, 0.35);
-                    myEngine.updateMvMatrix();
-                    coneMesh->draw();
-                myEngine.mvMatrixStack.popMatrix();
-
-                // FIN AILE (Membrane externe)
-                myEngine.mvMatrixStack.pushMatrix();
-                    myEngine.mvMatrixStack.addRotation(-0.5f * side, {0, 0, 1}); 
-                    myEngine.mvMatrixStack.addTranslation({1.0f * side, 0, 0}); 
-                    myEngine.mvMatrixStack.addRotation(M_PI_2 * side, {0, 1, 0}); 
-                    myEngine.mvMatrixStack.addHomothety({0.1, 1.0, 2.0}); 
-                    myEngine.setFlatColor(0.45, 0.65, 0.35);
-                    myEngine.updateMvMatrix();
-                    coneMesh->draw();
-                myEngine.mvMatrixStack.popMatrix();
-
-            myEngine.mvMatrixStack.popMatrix();
-        }
-
-
-    myEngine.mvMatrixStack.popMatrix();
-}
-
-void shadePtero(Vector3D vector, float angle){
-	myEngine.switchToPhongShading();
-	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addTranslation(vector);
-		myEngine.mvMatrixStack.addRotation(angle, Vector3D{0, 0, 1});
-		myEngine.updateMvMatrix();
-		renderPtero();
-	myEngine.mvMatrixStack.popMatrix();
-	myEngine.switchToFlatShading();
-}
-
 void renderBasicScene() {
 	a_frame->draw();
 	renderSun();
@@ -540,10 +257,10 @@ void renderBasicScene() {
 
 	float x = x_rel + (width / 2.0f);
 	float y = y_rel + (width / 2.0f);
-	float z = 80.0f;
+	float z = 85.0f;
 	float angle = angleRotation - M_PI/2;
 
-	renderPointLight(Vector3D{x, y, z});
+	renderPointLight(Vector3D{x, y, z}, angle);
 
     shadePtero(Vector3D{x, y, z}, angle);
 
@@ -685,3 +402,4 @@ int main(int /*argc*/, char** /*argv*/)
 	glfwTerminate();
 	return 0;
 }
+
