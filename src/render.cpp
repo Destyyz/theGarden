@@ -38,6 +38,7 @@ StandardMesh* a_frame;
 GLBI_Texture myTexture;
 GLBI_Engine myEngine;
 GLBI_Texture rockTexture;
+GLBI_Texture lavaTexture;
 
 bool flag_rotation = false;
 
@@ -215,6 +216,20 @@ void initBasicScene() {
         rockTexture.loadImage(img_width, img_height, img_channels, image_rock);
         rockTexture.detachTexture();
         stbi_image_free(image_rock);
+    }
+
+	// lave volcan :
+	auto image_lava = stbi_load("../assets/lava.png", &img_width, &img_height, &img_channels, 0);
+    if (image_lava != nullptr){
+        std::cout << "Texture lave chargee correctement" << std::endl;
+        lavaTexture.createTexture();
+        lavaTexture.attachTexture();
+        lavaTexture.setParameters(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        lavaTexture.setParameters(GL_TEXTURE_WRAP_S, GL_REPEAT);
+        lavaTexture.setParameters(GL_TEXTURE_WRAP_T, GL_REPEAT);
+        lavaTexture.loadImage(img_width, img_height, img_channels, image_lava);
+        lavaTexture.detachTexture();
+        stbi_image_free(image_lava);
     }
 }
 
@@ -512,18 +527,29 @@ void renderBasicScene() {
 	myEngine.switchToFlatShading();
 
 	// volcan :
-	myEngine.switchToPhongShading();
-	myEngine.setFlatColor(1.0, 1.0, 1.0);
+    myEngine.switchToPhongShading();
+    myEngine.setFlatColor(1.0, 1.0, 1.0);
     myEngine.mvMatrixStack.pushMatrix();
         myEngine.mvMatrixStack.addTranslation({-15.0f, -15.0f, 0.0f}); 
-        myEngine.updateMvMatrix();
+        
         myEngine.activateTexturing(true);
+        myEngine.updateMvMatrix();
         rockTexture.attachTexture();
         drawVolcano();
         rockTexture.detachTexture();
+
+        myEngine.mvMatrixStack.pushMatrix();
+            myEngine.mvMatrixStack.addTranslation({0.0f, 0.0f, 7.0f}); 
+            myEngine.mvMatrixStack.addHomothety({1.0f, 1.0f, 0.05f}); 
+            myEngine.updateMvMatrix();
+            lavaTexture.attachTexture();
+            sphereMesh->draw();
+            lavaTexture.detachTexture();
+        myEngine.mvMatrixStack.popMatrix();
+
         myEngine.activateTexturing(false);
     myEngine.mvMatrixStack.popMatrix();
-	myEngine.switchToFlatShading();
+    myEngine.switchToFlatShading();
 
 
 	myEngine.switchToPhongShading();

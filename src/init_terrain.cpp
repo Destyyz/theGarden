@@ -78,7 +78,7 @@ void volcanoGrid(int res_tour, int res_haut, int nb_lines, int res_int, std::vec
     float haut_max = 8.0f;
     float rayon_base = 5.0f;
     float rayon_sommet = 1.0f; 
-    float epaisseur = 0.2f;
+    float epaisseur = 0.1f;
     float profondeur = 4.0f;
 
     for (int y = 0; y < nb_lines; y++) {
