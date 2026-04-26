@@ -305,7 +305,6 @@ void renderPtero() {
     float wingAngle = sin(time * 5.0f) * 0.6f; 
 
     myEngine.mvMatrixStack.pushMatrix();
-        myEngine.mvMatrixStack.addTranslation({width/2.0f, width/2.0f, 25.0f}); 
         myEngine.mvMatrixStack.addHomothety({2.5, 2.5, 2.5}); 
         
         ////// CORPS
