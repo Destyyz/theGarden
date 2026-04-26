@@ -542,30 +542,31 @@ void renderBasicScene() {
 		renderPtero();
 	myEngine.mvMatrixStack.popMatrix();
 
-	// // volcan :
-    // myEngine.switchToPhongShading();
-    // myEngine.setFlatColor(1.0, 1.0, 1.0);
-    // myEngine.mvMatrixStack.pushMatrix();
-    //     myEngine.mvMatrixStack.addTranslation({-15.0f, -15.0f, 0.0f}); 
-        
-    //     myEngine.activateTexturing(true);
-    //     myEngine.updateMvMatrix();
-    //     rockTexture.attachTexture();
-    //     drawVolcano();
-    //     rockTexture.detachTexture();
+	// volcan :
+    myEngine.switchToPhongShading();
+    myEngine.setFlatColor(1.0, 1.0, 1.0);
+    myEngine.mvMatrixStack.pushMatrix();
+		myEngine.mvMatrixStack.addTranslation({width * 0.78f, width * 0.35f, -3.0f});
+        myEngine.mvMatrixStack.addHomothety({9.5f, 9.5f, 9.5f});
 
-    //     myEngine.mvMatrixStack.pushMatrix();
-    //         myEngine.mvMatrixStack.addTranslation({0.0f, 0.0f, 7.0f}); 
-    //         myEngine.mvMatrixStack.addHomothety({1.0f, 1.0f, 0.05f}); 
-    //         myEngine.updateMvMatrix();
-    //         lavaTexture.attachTexture();
-    //         sphereMesh->draw();
-    //         lavaTexture.detachTexture();
-    //     myEngine.mvMatrixStack.popMatrix();
+        myEngine.activateTexturing(true);
+        myEngine.updateMvMatrix();
+        rockTexture.attachTexture();
+        drawVolcano();
+        rockTexture.detachTexture();
 
-    //     myEngine.activateTexturing(false);
-    // myEngine.mvMatrixStack.popMatrix();
-    // myEngine.switchToFlatShading();
+        myEngine.mvMatrixStack.pushMatrix();
+            myEngine.mvMatrixStack.addTranslation({0.0f, 0.0f, 7.0f});
+            myEngine.mvMatrixStack.addHomothety({1.3f, 1.3f, 0.05f});
+            myEngine.updateMvMatrix();
+            lavaTexture.attachTexture();
+            sphereMesh->draw();
+            lavaTexture.detachTexture();
+        myEngine.mvMatrixStack.popMatrix();
+
+        myEngine.activateTexturing(false);
+    myEngine.mvMatrixStack.popMatrix();
+    myEngine.switchToFlatShading();
 
 
 	myEngine.switchToPhongShading();
