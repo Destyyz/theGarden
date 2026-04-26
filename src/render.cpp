@@ -48,11 +48,16 @@ GLBI_Texture lavaTexture;
 bool flag_rotation = false;
 
 // Camera parameters
-Vector3D pos_camera = Vector3D(50.0, 0, 50.0); // Position of the camera
-float angle_horizontal{90};					 // Angle between x axis and viewpoint
+Vector3D pos_camera = Vector3D(50.0, 0, 50.0);   // Position of the camera
+float angle_horizontal{90};					     // Angle between x axis and viewpoint
 float angle_vertical{-10};						 // Angle between z axis and viewpoint
 float speed{1.0};								 // Camera movement speed
 float day_speed = 20;
+
+struct FlightData {
+    Vector3D position;
+    float angle;
+};
 
 /* Error handling function */
 void onError(int error, const char* description) {
@@ -104,16 +109,6 @@ void onKey(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods
 
 }
 
-void onMouseButton(GLFWwindow* window, int button, int action, int /*mods*/)
-{
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		double xpos, ypos;
-		glfwGetCursorPos(window, &xpos, &ypos);
-		std::cout<<"Pressed in "<<xpos<<" "<<ypos<<std::endl;
-
-	}
-}
-
 void movement(GLFWwindow *window)
 {
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
@@ -158,19 +153,88 @@ void initFrame(){
 	a_frame->createVAO();
 }
 
+FlightData pteroTrajectory(float currentTime, float speed, float width) {
+    float L = 100.0f;
+    float R = 50.0f;
+    float periCercle = M_PI * R;
+    float totalPeri = (2 * L) + (2 * periCercle);
+    float dist = fmod(currentTime * speed, totalPeri);
+    float x_rel, y_rel, angleRotation;
+
+    if (dist < L) {
+        x_rel = (L / 2.0f) - dist;
+        y_rel = R;
+        angleRotation = M_PI;
+    } else if (dist < L + periCercle) {
+        float d_arc = dist - L;
+        float theta = (M_PI / 2.0f) + (d_arc / R); 
+        x_rel = -L / 2.0f + cos(theta) * R;
+        y_rel = sin(theta) * R;
+        angleRotation = theta + (M_PI / 2.0f);
+    } else if (dist < 2 * L + periCercle) {
+        float d_droite = dist - (L + periCercle);
+        x_rel = -L / 2.0f + d_droite;
+        y_rel = -R;
+        angleRotation = 0.0f;
+    } else {
+        float d_arc = dist - (2 * L + periCercle);
+        float theta = (3.0f * M_PI / 2.0f) + (d_arc / R);
+        x_rel = L / 2.0f + cos(theta) * R;
+        y_rel = sin(theta) * R;
+        angleRotation = theta + (M_PI / 2.0f);
+    }
+
+    float progress = dist / totalPeri; 
+    float z_base = 85.0f; 
+    float amplitude = 35.0f;
+    float decalage = 0.3f; 
+    float thetaZ = (progress + decalage) * 2.0f * M_PI;
+    
+    float x = x_rel + (width / 2.0f);
+    float y = y_rel + (width / 2.0f);
+    float z = z_base + (amplitude * sin(thetaZ));
+    float angle = angleRotation - M_PI/2.0f;
+
+    return { Vector3D{x, y, z}, angle };
+}
+
+void drawVolcanoLayer(float width) {
+    myEngine.switchToPhongShading();
+    myEngine.mvMatrixStack.pushMatrix();
+        myEngine.mvMatrixStack.addTranslation({width * 0.78f, width * 0.35f, -3.0f});
+        myEngine.mvMatrixStack.addHomothety({9.5f, 9.5f, 9.5f});
+        myEngine.activateTexturing(true);
+        myEngine.updateMvMatrix();
+        
+        rockTexture.attachTexture();
+        drawVolcano();
+        rockTexture.detachTexture();
+
+        myEngine.mvMatrixStack.pushMatrix();
+            myEngine.mvMatrixStack.addTranslation({0.0f, 0.0f, 7.0f});
+            myEngine.mvMatrixStack.addHomothety({1.3f, 1.3f, 0.05f});
+            myEngine.updateMvMatrix();
+            lavaTexture.attachTexture();
+            sphereMesh->draw();
+            lavaTexture.detachTexture();
+        myEngine.mvMatrixStack.popMatrix();
+
+        myEngine.activateTexturing(false);
+    myEngine.mvMatrixStack.popMatrix();
+    myEngine.switchToFlatShading();
+}
+
 void initBasicScene() {
 	auto pixmap = open_file("../assets/terrain_copy.pgm");
 
 	initTerrain(pixmap);
 	initTree();
 	initFrame();
-	initSun();
     initPtero();
-	// volcan :
+	initSun();
 	initVolcano(150, 75); 
 	
 	glActiveTexture(GL_TEXTURE0);
-	//Load de l'image
 	int img_width, img_height, img_channels;
 	auto image = stbi_load("../assets/herbe.png", &img_width, &img_height, &img_channels, 0);
 	if (image != nullptr){
@@ -189,7 +253,6 @@ void initBasicScene() {
 	myTexture.detachTexture();
 	stbi_image_free(image);
 
-	// volcan :
 	auto image_rock = stbi_load("../assets/volcano_rock.jpg", &img_width, &img_height, &img_channels, 0);
     if (image_rock != nullptr){
         std::cout << "Texture roche chargée correctement" << std::endl;
@@ -203,7 +266,6 @@ void initBasicScene() {
         stbi_image_free(image_rock);
     }
 
-	// lave volcan :
 	auto image_lava = stbi_load("../assets/lava.png", &img_width, &img_height, &img_channels, 0);
     if (image_lava != nullptr){
         std::cout << "Texture lave chargee correctement" << std::endl;
@@ -219,102 +281,40 @@ void initBasicScene() {
 }
 
 void renderBasicScene() {
-	a_frame->draw();
-	renderSun();
+    a_frame->draw();
+    renderSun();
 
-	float speed = day_speed;
-	float L = 100.0f;
-	float R = 50.0f;
-	
-	float periCercle = M_PI * R;
-	float totalPeri = (2 * L) + (2 * periCercle);
+    FlightData ptero = pteroTrajectory(glfwGetTime(), day_speed, width);
+    renderPointLight(ptero.position, ptero.angle);
+    shadePtero(ptero.position, ptero.angle);
 
-	float dist = fmod(glfwGetTime() * speed, totalPeri);
-	float x_rel, y_rel, angleRotation;
+    drawVolcanoLayer(width);
 
-	if (dist < L) {
-		x_rel = (L / 2.0f) - dist;
-		y_rel = R;
-		angleRotation = M_PI;
-	} else if (dist < L + periCercle) {
-		float d_arc = dist - L;
-		float theta = (M_PI / 2.0f) + (d_arc / R); 
-		x_rel = -L / 2.0f + cos(theta) * R;
-		y_rel = sin(theta) * R;
-		angleRotation = theta + (M_PI / 2.0f);
-	} else if (dist < 2 * L + periCercle) {
-		float d_droite = dist - (L + periCercle);
-		x_rel = -L / 2.0f + d_droite;
-		y_rel = -R;
-		angleRotation = 0.0f;
-	} else {
-		float d_arc = dist - (2 * L + periCercle);
-		float theta = (3.0f * M_PI / 2.0f) + (d_arc / R);
-		x_rel = L / 2.0f + cos(theta) * R;
-		y_rel = sin(theta) * R;
-		angleRotation = theta + (M_PI / 2.0f);
-	}
-
-	float x = x_rel + (width / 2.0f);
-	float y = y_rel + (width / 2.0f);
-	float z = 85.0f;
-	float angle = angleRotation - M_PI/2;
-
-	renderPointLight(Vector3D{x, y, z}, angle);
-
-    shadePtero(Vector3D{x, y, z}, angle);
-
-	// volcan :
     myEngine.switchToPhongShading();
     myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addTranslation({width * 0.78f, width * 0.35f, -3.0f});
-        myEngine.mvMatrixStack.addHomothety({9.5f, 9.5f, 9.5f});
-
-        myEngine.activateTexturing(true);
-        myEngine.updateMvMatrix();
-        rockTexture.attachTexture();
-        drawVolcano();
-        rockTexture.detachTexture();
+        myEngine.mvMatrixStack.addHomothety(10.0f);
+        myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0., -Sh*100});
+        
+        for (auto tree : pixelTrees) {
+            myEngine.mvMatrixStack.pushMatrix();
+                myEngine.mvMatrixStack.addTranslation(tree);
+                myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0, -0.1});
+                myEngine.updateMvMatrix();
+                renderTree();
+            myEngine.mvMatrixStack.popMatrix();
+        }
 
         myEngine.mvMatrixStack.pushMatrix();
-            myEngine.mvMatrixStack.addTranslation({0.0f, 0.0f, 7.0f});
-            myEngine.mvMatrixStack.addHomothety({1.3f, 1.3f, 0.05f});
             myEngine.updateMvMatrix();
-            lavaTexture.attachTexture();
-            sphereMesh->draw();
-            lavaTexture.detachTexture();
+            myEngine.activateTexturing(true);
+            myTexture.attachTexture();
+            drawTerrain();
+            myTexture.detachTexture();
+            myEngine.activateTexturing(false);
         myEngine.mvMatrixStack.popMatrix();
-
-        myEngine.activateTexturing(false);
+        
     myEngine.mvMatrixStack.popMatrix();
     myEngine.switchToFlatShading();
-
-
-	myEngine.switchToPhongShading();
-	myEngine.mvMatrixStack.pushMatrix();
-		myEngine.mvMatrixStack.addHomothety(10.);
-		myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0., -Sh*100});
-		myEngine.updateMvMatrix();
-		
-		for (auto tree : pixelTrees){
-			myEngine.mvMatrixStack.pushMatrix();
-				myEngine.mvMatrixStack.addTranslation(tree);
-				myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0, -0.1});
-				myEngine.updateMvMatrix();
-				renderTree();
-			myEngine.mvMatrixStack.popMatrix();
-		}
-
-		myEngine.mvMatrixStack.pushMatrix();
-			myEngine.updateMvMatrix();
-			myEngine.activateTexturing(true);
-			myTexture.attachTexture();
-			drawTerrain();
-			myTexture.detachTexture();
-			myEngine.activateTexturing(false);
-		myEngine.mvMatrixStack.popMatrix();
-	myEngine.mvMatrixStack.popMatrix();
-	myEngine.switchToFlatShading();
 }
 
 int main(int /*argc*/, char** /*argv*/)
@@ -347,7 +347,6 @@ int main(int /*argc*/, char** /*argv*/)
 
 	glfwSetWindowSizeCallback(window,onWindowResized);
 	glfwSetKeyCallback(window, onKey);
-	glfwSetMouseButtonCallback(window, onMouseButton);
 
 	std::cout<<"Engine init"<<std::endl;
 	myEngine.mode2D = false; // Set engine to 3D mode

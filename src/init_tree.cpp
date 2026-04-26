@@ -7,8 +7,6 @@ extern StandardMesh* coneMesh;
 extern IndexedMesh* cylinderMesh;
 extern IndexedMesh* sphereMesh;
 
-
-
 void initTree() {
     coneMesh = basicCone(1, 1);
     coneMesh->createVAO();
@@ -38,7 +36,7 @@ void renderTree() {
 
 			myEngine.mvMatrixStack.pushMatrix();
 				myEngine.mvMatrixStack.addTranslation({0., offset, 0.});
-				myEngine.mvMatrixStack.addHomothety({width, 0.01, width});
+				myEngine.mvMatrixStack.addHomothety({width, 0.02, width});
 				myEngine.updateMvMatrix();
 				sphereMesh->draw();
 			myEngine.mvMatrixStack.popMatrix();
@@ -56,6 +54,7 @@ void renderTree() {
 			width -= 0.05f;
 			
 		}
+		
 	myEngine.mvMatrixStack.popMatrix();
 	myEngine.setFlatColor(1., 1., 1.);
 }

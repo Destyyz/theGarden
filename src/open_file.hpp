@@ -17,22 +17,7 @@ extern float Sh, Sp;
 
 std::vector<int> get_neighbors(int index, int width);
 
-/**
- *  Extrait les octets de données du fichier PGM 
- * et les ajoute dans un tableau sous la forme (x, élévation, y)
- *
- * @param str les données contenues dans le fichier PGM
- * @param width la largeur de l'image PGM
- * @return Un tableau contenant un tuple(x, elevation, y) pour tout point du fichier PGM
- */
 std::vector<Vector3D> compute_bytes(std::string str, int width);
 
-/**
- * Ouvre et lit le fichier PGM, dont le nom est donné en paramètre
- * Extrait de ce fichier la hauteur, largeur, échelle de gris du terrain et ses données.
- *
- * @param file_name le nom du fichier PGM
- * @return tableau contenant un tuple(x, elevation, y) pour tout point du fichier PGM
- */
 std::vector<Vector3D> open_file(std::string name);
 
