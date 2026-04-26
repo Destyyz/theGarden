@@ -29,6 +29,7 @@ static const double FRAMERATE_IN_SECONDS = 1. / 30.;
 extern float Sh, Sp;
 extern int width;
 extern std::vector<Vector3D> pixelTrees;
+std::vector<int> tabCones;
 
 // Pour le ptérodactyle RAWR
 IndexedMesh* sphereMesh = nullptr;
@@ -146,10 +147,10 @@ void movement(GLFWwindow *window)
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		pos_camera[2] -= 1.0 * speed;
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		pos_camera[2] += 1.0 * speed;
+	
 }
 
 void initFrame(){
@@ -161,7 +162,6 @@ void initBasicScene() {
 	auto pixmap = open_file("../assets/terrain_copy.pgm");
 
 	initTerrain(pixmap);
-
 	initTree();
 	initFrame();
 	initSun();
@@ -292,9 +292,10 @@ void renderBasicScene() {
 
 	myEngine.switchToPhongShading();
 	myEngine.mvMatrixStack.pushMatrix();
-	myEngine.mvMatrixStack.addHomothety(10.);
-	myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0., -Sh*100});
-	myEngine.updateMvMatrix();
+		myEngine.mvMatrixStack.addHomothety(10.);
+		myEngine.mvMatrixStack.addTranslation(Vector3D{0., 0., -Sh*100});
+		myEngine.updateMvMatrix();
+		
 		for (auto tree : pixelTrees){
 			myEngine.mvMatrixStack.pushMatrix();
 				myEngine.mvMatrixStack.addTranslation(tree);

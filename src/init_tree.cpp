@@ -5,6 +5,9 @@
 extern GLBI_Engine myEngine;
 extern StandardMesh* coneMesh;
 extern IndexedMesh* cylinderMesh;
+extern IndexedMesh* sphereMesh;
+
+
 
 void initTree() {
     coneMesh = basicCone(1, 1);
@@ -26,13 +29,33 @@ void renderTree() {
 			cylinderMesh->draw();
 		myEngine.mvMatrixStack.popMatrix();
 
-		myEngine.setFlatColor(55/255.,100/255.,2/255.);
-		myEngine.mvMatrixStack.pushMatrix();
-			myEngine.mvMatrixStack.addHomothety({0.5, 1.2, 0.5});
-			myEngine.mvMatrixStack.addTranslation({0., 0.4, 0.});
-			myEngine.updateMvMatrix();
-			coneMesh->draw();
-		myEngine.mvMatrixStack.popMatrix();
+		auto offset = 0.4f;
+		auto height = 1.2f;
+		auto width = 0.5f;
+		
+		myEngine.setFlatColor(55/255., 100/255., 2/255.);
+		for (auto i = 0; i < 3; i++){
+
+			myEngine.mvMatrixStack.pushMatrix();
+				myEngine.mvMatrixStack.addTranslation({0., offset, 0.});
+				myEngine.mvMatrixStack.addHomothety({width, 0.01, width});
+				myEngine.updateMvMatrix();
+				sphereMesh->draw();
+			myEngine.mvMatrixStack.popMatrix();
+
+			myEngine.mvMatrixStack.pushMatrix();
+				myEngine.mvMatrixStack.addTranslation({0., offset, 0.});
+				myEngine.mvMatrixStack.addHomothety({width, height, width});
+				myEngine.updateMvMatrix();
+				coneMesh->draw();
+			myEngine.mvMatrixStack.popMatrix();
+
+
+			offset += 0.2f;
+			height -= 0.2f;
+			width -= 0.05f;
+			
+		}
 	myEngine.mvMatrixStack.popMatrix();
 	myEngine.setFlatColor(1., 1., 1.);
 }
